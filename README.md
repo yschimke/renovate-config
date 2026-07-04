@@ -51,3 +51,34 @@ AndroidX is not one release train — `core`, `room`, `work`, `wear`, `lifecycle
 single breaking artifact blocks every safe bump riding along with it. The right
 unit is the release train (things sharing a version), plus a catch-all for the
 miscellaneous small libs where combining is harmless.
+
+## Automerge
+
+Patch and minor updates **auto-land once every CI check on the branch is
+green**. Major updates never automerge — they get a 14-day soak and a manual
+click.
+
+The preset uses `platformAutomerge: false`, so **Renovate itself waits for all
+checks to pass** and then merges — it can't merge ahead of CI, and it honours
+*every* workflow, not just the ones marked required. PR creation stays on the
+weekly `schedule`, but `automergeSchedule: ["at any time"]` lets a
+newly-green PR merge on the next Renovate run (≈hourly) instead of waiting for
+the next weekly window. No branch protection is required for this to be safe.
+
+A grouped PR only automerges if **every** update in it qualifies, so a group
+that happens to include a major bump stays manual until the major is handled.
+
+### Switching to instant GitHub-native merge
+
+If you'd rather have GitHub merge the instant required checks pass (seconds
+instead of ≈an hour):
+
+1. Enable **Settings → General → Allow auto-merge** on the repo.
+2. Add a branch-protection rule on `main` that **requires** the CI checks
+   (e.g. `Assemble (debug)`, `Unit tests`, `Android lint`, `ktfmt check`).
+   This is essential — with native auto-merge, anything *not* required is not
+   waited on.
+3. Set `"platformAutomerge": true` in this preset.
+
+Without step 2, native auto-merge would merge without waiting for CI, which is
+why the default here is the Renovate-internal mechanism.

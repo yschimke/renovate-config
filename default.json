@@ -12,11 +12,18 @@
   "prConcurrentLimit": 5,
   "prHourlyLimit": 0,
   "rangeStrategy": "pin",
+  "platformAutomerge": false,
+  "automergeSchedule": ["at any time"],
   "packageRules": [
     {
       "description": "Ignore the legacy-API -compat artifacts (e.g. kotlinx-datetime 0.8.0-0.6.x-compat).",
       "matchPackageNames": ["/^org\\.jetbrains\\.kotlinx($|[.:])/"],
       "allowedVersions": "!/-compat$/"
+    },
+    {
+      "description": "Auto-land patch & minor updates once every CI check on the branch is green. platformAutomerge is false, so Renovate waits for ALL checks (not just branch-protection-required ones) before merging — it cannot merge ahead of CI. A grouped PR only automerges if every update in it qualifies, so any group that happens to contain a major stays manual. To switch to instant GitHub-native merge instead, set platformAutomerge:true here and mark the CI checks required on main via branch protection.",
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
+      "automerge": true
     },
     {
       "groupName": "kotlin",

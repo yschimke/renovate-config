@@ -1,0 +1,105 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Shared Renovate preset for yschimke Android / Compose / Kotlin repos. Updates are clustered by release train (things that share a version and are ABI-coupled move together); everything else stays small. Extend with { \"extends\": [\"github>yschimke/renovate-config\"] }.",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "labels": ["dependencies"],
+  "schedule": ["before 6am on monday"],
+  "timezone": "Europe/London",
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 0,
+  "rangeStrategy": "pin",
+  "packageRules": [
+    {
+      "description": "Ignore the legacy-API -compat artifacts (e.g. kotlinx-datetime 0.8.0-0.6.x-compat).",
+      "matchPackageNames": ["/^org\\.jetbrains\\.kotlinx($|[.:])/"],
+      "allowedVersions": "!/-compat$/"
+    },
+    {
+      "groupName": "kotlin",
+      "description": "Kotlin compiler train: stdlib, the Kotlin Gradle plugins, the Compose compiler plugin, and KSP all track the compiler version and must bump together.",
+      "matchPackageNames": [
+        "/^org\\.jetbrains\\.kotlin($|[.:])/",
+        "org.jetbrains.kotlin.plugin.compose",
+        "/^com\\.google\\.devtools\\.ksp($|[.:])/"
+      ]
+    },
+    {
+      "groupName": "kotlinx",
+      "description": "kotlinx libraries (coroutines, serialization, io, datetime) release independently of the compiler but are co-tested; batch them to cut PR noise.",
+      "matchPackageNames": ["/^org\\.jetbrains\\.kotlinx($|[.:])/"]
+    },
+    {
+      "groupName": "compose-multiplatform",
+      "description": "JetBrains Compose Multiplatform release train plus its lifecycle / navigation companions, which version in lockstep with it.",
+      "matchPackageNames": [
+        "/^org\\.jetbrains\\.compose($|[.:])/",
+        "/^org\\.jetbrains\\.androidx\\.lifecycle($|[.:])/",
+        "/^org\\.jetbrains\\.androidx\\.navigation($|[.:])/"
+      ]
+    },
+    {
+      "groupName": "androidx",
+      "description": "Catch-all for the remaining, independently-versioned AndroidX libraries (core, activity, datastore, work, navigation3, test, ...). Batched because these small libs rarely break; the release-train groups below deliberately override this for their members.",
+      "matchPackageNames": ["/^androidx\\./"]
+    },
+    {
+      "groupName": "androidx-compose",
+      "description": "AndroidX Compose (BOM-aligned) artifacts move together. Overrides the androidx catch-all.",
+      "matchPackageNames": [
+        "/^androidx\\.compose($|[.:])/",
+        "/^androidx\\.activity:activity-compose/"
+      ]
+    },
+    {
+      "groupName": "androidx-wear",
+      "description": "Wear Compose / TV plus Horologist, which tracks the Wear Compose line. Overrides the androidx catch-all.",
+      "matchPackageNames": [
+        "/^androidx\\.wear($|[.:])/",
+        "/^androidx\\.tv($|[.:])/",
+        "/^com\\.google\\.android\\.horologist($|[.:])/"
+      ]
+    },
+    {
+      "groupName": "androidx-room",
+      "description": "Room + SQLite + the Room Gradle plugin move together and are KSP-coupled. Overrides the androidx catch-all.",
+      "matchPackageNames": [
+        "/^androidx\\.room($|[.:])/",
+        "/^androidx\\.sqlite($|[.:])/"
+      ]
+    },
+    {
+      "groupName": "grpc",
+      "description": "gRPC + protobuf runtime/codegen must move in lockstep.",
+      "matchPackageNames": [
+        "/^io\\.grpc($|[.:])/",
+        "/^com\\.google\\.protobuf($|[.:])/"
+      ]
+    },
+    {
+      "groupName": "ktor",
+      "matchPackageNames": ["/^io\\.ktor($|[.:])/"]
+    },
+    {
+      "groupName": "android-gradle-plugin",
+      "matchPackageNames": [
+        "com.android.application",
+        "com.android.library",
+        "com.android.kotlin.multiplatform.library",
+        "com.android.tools.build:gradle"
+      ]
+    },
+    {
+      "groupName": "github-actions",
+      "matchManagers": ["github-actions"]
+    },
+    {
+      "description": "Give majors extra soak time before opening the PR.",
+      "matchUpdateTypes": ["major"],
+      "minimumReleaseAge": "14 days"
+    }
+  ]
+}

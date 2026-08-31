@@ -104,6 +104,46 @@
       "matchManagers": ["github-actions"]
     },
     {
+      "groupName": "compose-ai-tools",
+      "description": "yschimke/compose-ai-tools ships the preview CLI, the `ee.schimke.composeai.preview` Gradle plugin, the annotation / connector / runtime artifacts and the reusable CI actions as ONE release, so a pinned action ref and the Gradle coords must move in a single PR — a skew between them breaks preview discovery outright. This is the BROAD rule for the `ee.schimke.composeai` group. The three rules below carve their own coordinates back out of it and MUST stay after it: Renovate applies packageRules in order and the last match wins.",
+      "matchPackageNames": [
+        "yschimke/compose-ai-tools",
+        "/^ee\\.schimke\\.composeai($|[.:])/"
+      ]
+    },
+    {
+      "groupName": "compose-preview-contracts",
+      "description": "yschimke/compose-preview-contracts — the published wire contracts. They carry the `ee.schimke.composeai` group but are released from their own repository on their own version line (2.x, while compose-ai-tools is on 1.5x.x), so they must not ride the compose-ai-tools group: one group means one shared version ref, and Renovate would raise it to a version the other train never published. Listed by exact artifactId because the two repos' names interleave — `daemon-protocol` is a contract and `daemon-core` is not, `data-render-core` is a contract and `data-render-compose` is not.",
+      "matchPackageNames": [
+        "ee.schimke.composeai:daemon-protocol",
+        "ee.schimke.composeai:daemon-devices",
+        "ee.schimke.composeai:daemon-bta",
+        "ee.schimke.composeai:agent-grant-protocol",
+        "ee.schimke.composeai:data-render-core",
+        "ee.schimke.composeai:data-layoutinspector-core",
+        "ee.schimke.composeai:data-theme-core",
+        "ee.schimke.composeai:data-preview-overrides-core",
+        "ee.schimke.composeai:common-io"
+      ]
+    },
+    {
+      "groupName": "compose-preview-server",
+      "description": "yschimke/compose-preview-server — `compose-preview serve` and its render host. Same group coordinate, own repository, own version line again, independent of both compose-ai-tools and the contracts. Two coordinates today; if the server publishes more, add them here rather than letting them fall back into the compose-ai-tools group.",
+      "matchPackageNames": [
+        "ee.schimke.composeai:compose-preview-serve",
+        "ee.schimke.composeai:compose-preview-render-host"
+      ]
+    },
+    {
+      "groupName": "rc-players",
+      "description": "yschimke/rc-players — the RemoteCompose players, the fourth train under this group and the one that proved the point. Grouped with compose-ai-tools, Renovate raised a shared version ref to a player-only version and dragged four compose-ai-tools artifacts to a version nobody published (wear-m3-catalog#199).",
+      "matchPackageNames": [
+        "/^ee\\.schimke\\.composeai:rc-player-/",
+        "/^ee\\.schimke\\.composeai:third-party-rc-embedded-player($|-)/",
+        "ee.schimke.composeai:remote-compose-player-js-dist"
+      ]
+    },
+    {
       "description": "Give majors extra soak time before opening the PR.",
       "matchUpdateTypes": ["major"],
       "minimumReleaseAge": "14 days"

@@ -33,6 +33,14 @@ everything else stays small so a single risky bump can't block the safe ones.
 - **androidx-wear** — Wear Compose / TV + Horologist.
 - **androidx-room** — Room + SQLite (+ the Room plugin), which are KSP-coupled.
 - **grpc** — gRPC + protobuf runtime / codegen.
+- **compose-ai-tools** — the preview CLI, the `ee.schimke.composeai.preview`
+  Gradle plugin, the annotation / connector / runtime artifacts and the
+  `yschimke/compose-ai-tools` action refs. One release ships all of them, and a
+  skew between a pinned action ref and the Gradle coords breaks preview
+  discovery.
+- **compose-preview-contracts** — the nine published wire contracts.
+- **compose-preview-server** — `compose-preview-serve` + `compose-preview-render-host`.
+- **rc-players** — the RemoteCompose player artifacts.
 
 **Convenience groups** (independent, but low-risk to batch):
 
@@ -43,6 +51,36 @@ everything else stays small so a single risky bump can't block the safe ones.
   release-train groups above override this for their members.
 
 **Infra:** `android-gradle-plugin`, `github-actions`.
+
+### One Maven group, four release trains
+
+`ee.schimke.composeai` is **not** one release train. Four repositories publish
+into it, each cutting its own versions:
+
+| Train | Repo | Version line |
+| --- | --- | --- |
+| `compose-ai-tools` | [yschimke/compose-ai-tools](https://github.com/yschimke/compose-ai-tools) | `1.5x.x` |
+| `compose-preview-contracts` | [yschimke/compose-preview-contracts](https://github.com/yschimke/compose-preview-contracts) | `2.x` |
+| `compose-preview-server` | [yschimke/compose-preview-server](https://github.com/yschimke/compose-preview-server) | `2.x`, independent of the contracts |
+| `rc-players` | yschimke/rc-players | its own, already ahead |
+
+Grouping them together is not just noise, it is wrong: one group means one
+shared version ref in `libs.versions.toml`, and Renovate raises that ref to
+whichever train released last — proposing a version the other three never
+published. That is exactly how wear-m3-catalog#199 broke, when the players
+dragged four compose-ai-tools artifacts to a player-only version.
+
+The `compose-ai-tools` rule matches the whole group; the other three follow it
+and carve their own coordinates back out. **Order is load-bearing** — Renovate
+applies `packageRules` in sequence and the last match wins, so a repo-local
+rule appended after the preset re-collapses all four unless it splits them the
+same way.
+
+The contracts and the server are listed by exact artifactId rather than by
+prefix, because the names interleave with compose-ai-tools': `daemon-protocol`
+is a contract but `daemon-core` is not, `data-render-core` is a contract but
+`data-render-compose` is not. A new published coordinate therefore has to be
+added to the right list by hand; unlisted ones fall into `compose-ai-tools`.
 
 ### Why not "all of AndroidX" in one group?
 

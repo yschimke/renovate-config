@@ -52,35 +52,41 @@ everything else stays small so a single risky bump can't block the safe ones.
 
 **Infra:** `android-gradle-plugin`, `github-actions`.
 
-### One Maven group, four release trains
+### One Maven group, five release trains
 
-`ee.schimke.composeai` is **not** one release train. Four repositories publish
+`ee.schimke.composeai` is **not** one release train. Five repositories publish
 into it, each cutting its own versions:
 
 | Train | Repo | Version line |
 | --- | --- | --- |
-| `compose-ai-tools` | [yschimke/compose-ai-tools](https://github.com/yschimke/compose-ai-tools) | `1.5x.x` |
+| `compose-ai-tools` | [yschimke/compose-ai-tools](https://github.com/yschimke/compose-ai-tools) | `2.1x.x` |
+| `compose-preview-daemon` | [yschimke/compose-preview-daemon](https://github.com/yschimke/compose-preview-daemon) | `3.x` |
 | `compose-preview-contracts` | [yschimke/compose-preview-contracts](https://github.com/yschimke/compose-preview-contracts) | `2.x` |
-| `compose-preview-server` | [yschimke/compose-preview-server](https://github.com/yschimke/compose-preview-server) | `2.x`, independent of the contracts |
+| `compose-preview-server` | [yschimke/compose-preview-server](https://github.com/yschimke/compose-preview-server) | `3.x`, independent of the contracts |
 | `rc-players` | yschimke/rc-players | its own, already ahead |
 
 Grouping them together is not just noise, it is wrong: one group means one
 shared version ref in `libs.versions.toml`, and Renovate raises that ref to
-whichever train released last — proposing a version the other three never
+whichever train released last — proposing a version the other four never
 published. That is exactly how wear-m3-catalog#199 broke, when the players
-dragged four compose-ai-tools artifacts to a player-only version.
+dragged four compose-ai-tools artifacts to a player-only version, and how
+compose-preview-daemon#91 and #92 opened two branches with byte-identical
+diffs, both rewriting one `composeai-contracts` ref.
 
-The `compose-ai-tools` rule matches the whole group; the other three follow it
+The `compose-ai-tools` rule matches the whole group; the other four follow it
 and carve their own coordinates back out. **Order is load-bearing** — Renovate
 applies `packageRules` in sequence and the last match wins, so a repo-local
 rule appended after the preset re-collapses all four unless it splits them the
 same way.
 
-The contracts and the server are listed by exact artifactId rather than by
-prefix, because the names interleave with compose-ai-tools': `daemon-protocol`
-is a contract but `daemon-core` is not, `data-render-core` is a contract but
-`data-render-compose` is not. A new published coordinate therefore has to be
-added to the right list by hand; unlisted ones fall into `compose-ai-tools`.
+The daemon, the contracts and the server are listed by exact artifactId rather
+than by prefix, because the names interleave three ways: `daemon-protocol` is a
+contract but `daemon-core` is the daemon's, `data-render-core` is a contract but
+`data-render-compose` is the daemon's, `slot-preview-runtime` is the daemon's
+but `wear-preview-runtime` is compose-ai-tools'. A new published coordinate
+therefore has to be added to the right list by hand; unlisted ones fall into
+`compose-ai-tools`. Regenerate a train's list from its repository with
+`grep -rhA2 '^  coordinates($' --include=build.gradle.kts . | grep -o '"[a-z0-9-]*"'`.
 
 ### Why not "all of AndroidX" in one group?
 
@@ -89,6 +95,23 @@ AndroidX is not one release train — `core`, `room`, `work`, `wear`, `lifecycle
 single breaking artifact blocks every safe bump riding along with it. The right
 unit is the release train (things sharing a version), plus a catch-all for the
 miscellaneous small libs where combining is harmless.
+
+## Versions that are never upgrades
+
+Two suffixes are filtered out of the candidate list for every Gradle
+dependency, rather than disabled, so the next genuine release is still offered:
+
+- **`-SNAPSHOT`** — Renovate's Gradle versioning ranks `1.0.0-SNAPSHOT` above
+  `1.0.0-alpha18`, so an upstream publishing snapshots into a repository the
+  build already reads is offered as though it were a release.
+- **`-compat`** — JetBrains' legacy-API rebuilds (`kotlinx-datetime
+  0.8.0-0.6.x-compat`) rank above the plain release, so the "upgrade" is a
+  downgrade of API surface.
+
+Both set `allowedVersions`, and **the last matching rule wins on a field**: a
+repo-local rule that sets `allowedVersions` across the whole `gradle` manager
+replaces these entirely for those dependencies and has to repeat the suffixes
+itself.
 
 ## Automerge
 

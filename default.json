@@ -16,9 +16,14 @@
   "automergeSchedule": ["at any time"],
   "packageRules": [
     {
-      "description": "Ignore the legacy-API -compat artifacts (e.g. kotlinx-datetime 0.8.0-0.6.x-compat).",
+      "description": "A -SNAPSHOT is never an upgrade target. Renovate's gradle versioning ranks `1.0.0-SNAPSHOT` ABOVE `1.0.0-alpha18`, so an upstream that publishes snapshots into a repository the build already reads is offered as if it were a release \u2014 rc-players is currently offered `androidx.compose.remote:* 1.0.0-alpha18 -> 1.0.0-SNAPSHOT` on seven coordinates at once. Filtering the suffix out of the candidate list rather than disabling the update keeps the next genuine release on offer, and leaves a repo that deliberately sits ON a snapshot where it is. A repo-local rule that sets `allowedVersions` for the whole gradle manager REPLACES this one for those deps \u2014 last match wins on the same field \u2014 so such a rule has to carry the suffix itself.",
+      "matchManagers": ["gradle"],
+      "allowedVersions": "!/-SNAPSHOT$/"
+    },
+    {
+      "description": "Ignore the legacy-API -compat artifacts (e.g. kotlinx-datetime 0.8.0-0.6.x-compat). Carries the -SNAPSHOT filter from the rule above as well: both set `allowedVersions` and the last match wins, so naming only -compat here would hand kotlinx its snapshots back.",
       "matchPackageNames": ["/^org\\.jetbrains\\.kotlinx($|[.:])/"],
-      "allowedVersions": "!/-compat$/"
+      "allowedVersions": "!/(-compat|-SNAPSHOT)$/"
     },
     {
       "description": "Auto-land patch & minor updates once every CI check on the branch is green. platformAutomerge is false, so Renovate waits for ALL checks (not just branch-protection-required ones) before merging — it cannot merge ahead of CI. A grouped PR only automerges if every update in it qualifies, so any group that happens to contain a major stays manual. To switch to instant GitHub-native merge instead, set platformAutomerge:true here and mark the CI checks required on main via branch protection.",
@@ -105,15 +110,90 @@
     },
     {
       "groupName": "compose-ai-tools",
-      "description": "yschimke/compose-ai-tools ships the preview CLI, the `ee.schimke.composeai.preview` Gradle plugin, the annotation / connector / runtime artifacts and the reusable CI actions as ONE release, so a pinned action ref and the Gradle coords must move in a single PR — a skew between them breaks preview discovery outright. This is the BROAD rule for the `ee.schimke.composeai` group. The three rules below carve their own coordinates back out of it and MUST stay after it: Renovate applies packageRules in order and the last match wins.",
+      "description": "yschimke/compose-ai-tools ships the preview CLI, the `ee.schimke.composeai.preview` Gradle plugin, the discovery / bundle / render-session / render-host artifacts, its own `*-preview-runtime` modules and the reusable CI actions as ONE release, so a pinned action ref and the Gradle coords must move in a single PR — a skew breaks preview discovery outright. This is the BROAD rule for the `ee.schimke.composeai` group, and the FOUR rules after it carve their own trains back out of it; the last match wins, so they stay after it. The annotation, connector, data and renderer artifacts this train used to ship are no longer part of it — they moved to yschimke/compose-preview-daemon at its 3.0.0 (compose-ai-tools#5336) and are carved out immediately below.",
       "matchPackageNames": [
         "yschimke/compose-ai-tools",
         "/^ee\\.schimke\\.composeai($|[.:])/"
       ]
     },
     {
+      "groupName": "compose-preview-daemon",
+      "description": "yschimke/compose-preview-daemon \u2014 the renderers, the data extractors, the render daemon and the preview runtimes it hosts. The fifth train under this group, and the one the split left behind: these coordinates moved out of compose-ai-tools at the daemon's 3.0.0 (compose-ai-tools#5336) onto a 3.x line of their own, but no rule followed them, so every one of them fell into the compose-ai-tools group above. rc-players is currently offered `fix(deps): update compose-ai-tools to v3.4.3` for two daemon artifacts, and compose-preview-server has the tools line and the daemon line riding one PR. Listed by exact artifactId, like the contracts and the server, because the names interleave three ways: `data-render-compose` is the daemon's but `data-render-core` is a contract, and `slot-preview-runtime` is the daemon's but `wear-preview-runtime` is compose-ai-tools'. Regenerate the list from that repository with `grep -rhA2 '^  coordinates($' --include=build.gradle.kts . | grep -o '\"[a-z0-9-]*\"'`; a newly published coordinate has to be added by hand or it falls back into compose-ai-tools.",
+      "matchPackageNames": [
+        "ee.schimke.composeai:daemon-android",
+        "ee.schimke.composeai:daemon-client",
+        "ee.schimke.composeai:daemon-core",
+        "ee.schimke.composeai:daemon-desktop",
+        "ee.schimke.composeai:data-a11y-connector",
+        "ee.schimke.composeai:data-a11y-core",
+        "ee.schimke.composeai:data-a11y-hierarchy-android",
+        "ee.schimke.composeai:data-ambient-connector",
+        "ee.schimke.composeai:data-ambient-core",
+        "ee.schimke.composeai:data-deviceframe-connector",
+        "ee.schimke.composeai:data-deviceframe-core",
+        "ee.schimke.composeai:data-displayfilter-connector",
+        "ee.schimke.composeai:data-displayfilter-core",
+        "ee.schimke.composeai:data-focus-connector",
+        "ee.schimke.composeai:data-focus-connector-desktop",
+        "ee.schimke.composeai:data-focus-core",
+        "ee.schimke.composeai:data-fonts-connector",
+        "ee.schimke.composeai:data-fonts-core",
+        "ee.schimke.composeai:data-fonts-google",
+        "ee.schimke.composeai:data-gestures-connector",
+        "ee.schimke.composeai:data-gestures-core",
+        "ee.schimke.composeai:data-gestures-robolectric-stubs",
+        "ee.schimke.composeai:data-glimmer-environment-connector",
+        "ee.schimke.composeai:data-history-connector",
+        "ee.schimke.composeai:data-history-core",
+        "ee.schimke.composeai:data-keyboard-band",
+        "ee.schimke.composeai:data-keyboard-connector",
+        "ee.schimke.composeai:data-keyboard-connector-desktop",
+        "ee.schimke.composeai:data-keyboard-core",
+        "ee.schimke.composeai:data-launcher-widget-connector",
+        "ee.schimke.composeai:data-layoutinspector-connector",
+        "ee.schimke.composeai:data-motion-core",
+        "ee.schimke.composeai:data-navigation-connector",
+        "ee.schimke.composeai:data-navigation-core",
+        "ee.schimke.composeai:data-permissions-connector",
+        "ee.schimke.composeai:data-permissions-core",
+        "ee.schimke.composeai:data-preview-overrides-connector",
+        "ee.schimke.composeai:data-preview-overrides-runtime",
+        "ee.schimke.composeai:data-pseudolocale-connector",
+        "ee.schimke.composeai:data-pseudolocale-connector-desktop",
+        "ee.schimke.composeai:data-pseudolocale-core",
+        "ee.schimke.composeai:data-recomposition-connector",
+        "ee.schimke.composeai:data-recomposition-core",
+        "ee.schimke.composeai:data-remotecompose-connector",
+        "ee.schimke.composeai:data-remotecompose-core",
+        "ee.schimke.composeai:data-render-compose",
+        "ee.schimke.composeai:data-render-connector",
+        "ee.schimke.composeai:data-resources-connector",
+        "ee.schimke.composeai:data-resources-core",
+        "ee.schimke.composeai:data-scroll-android",
+        "ee.schimke.composeai:data-scroll-connector",
+        "ee.schimke.composeai:data-scroll-core",
+        "ee.schimke.composeai:data-strings-connector",
+        "ee.schimke.composeai:data-strings-core",
+        "ee.schimke.composeai:data-theme-connector",
+        "ee.schimke.composeai:data-touch-overlay-connector",
+        "ee.schimke.composeai:data-uiautomator-connector",
+        "ee.schimke.composeai:data-uiautomator-core",
+        "ee.schimke.composeai:data-uiautomator-hierarchy-android",
+        "ee.schimke.composeai:data-wallpaper-connector",
+        "ee.schimke.composeai:data-wallpaper-core",
+        "ee.schimke.composeai:lottie-preview-runtime",
+        "ee.schimke.composeai:preview-annotations",
+        "ee.schimke.composeai:preview-data-api",
+        "ee.schimke.composeai:renderer-android",
+        "ee.schimke.composeai:renderer-desktop",
+        "ee.schimke.composeai:renderer-xr-client",
+        "ee.schimke.composeai:slot-preview-runtime",
+        "ee.schimke.composeai:svg-preview-runtime"
+      ]
+    },
+    {
       "groupName": "compose-preview-contracts",
-      "description": "yschimke/compose-preview-contracts — the published wire contracts. They carry the `ee.schimke.composeai` group but are released from their own repository on their own version line (2.x, while compose-ai-tools is on 1.5x.x), so they must not ride the compose-ai-tools group: one group means one shared version ref, and Renovate would raise it to a version the other train never published. Listed by exact artifactId because the two repos' names interleave — `daemon-protocol` is a contract and `daemon-core` is not, `data-render-core` is a contract and `data-render-compose` is not.",
+      "description": "yschimke/compose-preview-contracts — the published wire contracts. They carry the `ee.schimke.composeai` group but are released from their own repository on their own version line (2.x, while compose-ai-tools is on 1.5x.x), so they must not ride the compose-ai-tools group: one group means one shared version ref, and Renovate would raise it to a version the other train never published. Listed by exact artifactId because the two repos' names interleave — `daemon-protocol` is a contract and `daemon-core` is not, `data-render-core` is a contract and `data-render-compose` is not. `screen-document`, `ui-builder-protocol` and `parity-issues-protocol` were missing from this list while three catalogs already resolved them on the shared `composeai-contracts` ref, so they fell into the compose-ai-tools group: that is how compose-preview-daemon#91 (“update compose-ai-tools to v2.17.0”) and #92 (“update compose-preview-contracts to v2.17.0”) ended up as two branches with byte-identical diffs, both rewriting the same version ref.",
       "matchPackageNames": [
         "ee.schimke.composeai:daemon-protocol",
         "ee.schimke.composeai:daemon-devices",
@@ -123,15 +203,19 @@
         "ee.schimke.composeai:data-layoutinspector-core",
         "ee.schimke.composeai:data-theme-core",
         "ee.schimke.composeai:data-preview-overrides-core",
-        "ee.schimke.composeai:common-io"
+        "ee.schimke.composeai:common-io",
+        "ee.schimke.composeai:screen-document",
+        "ee.schimke.composeai:ui-builder-protocol",
+        "ee.schimke.composeai:parity-issues-protocol"
       ]
     },
     {
       "groupName": "compose-preview-server",
-      "description": "yschimke/compose-preview-server — `compose-preview serve` and its render host. Same group coordinate, own repository, own version line again, independent of both compose-ai-tools and the contracts. Two coordinates today; if the server publishes more, add them here rather than letting them fall back into the compose-ai-tools group.",
+      "description": "yschimke/compose-preview-server — `compose-preview serve` and its render host. Same group coordinate, own repository, own version line again, independent of both compose-ai-tools and the contracts. `compose-preview-ui-builder-export` is the third and was the one missing: wear-m3-catalog resolves it on a `composePreviewServer` ref of its own and it was landing in the compose-ai-tools group. If the server publishes more, add them here rather than letting them fall back into the compose-ai-tools group.",
       "matchPackageNames": [
         "ee.schimke.composeai:compose-preview-serve",
-        "ee.schimke.composeai:compose-preview-render-host"
+        "ee.schimke.composeai:compose-preview-render-host",
+        "ee.schimke.composeai:compose-preview-ui-builder-export"
       ]
     },
     {

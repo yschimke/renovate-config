@@ -193,7 +193,7 @@
     },
     {
       "groupName": "compose-preview-contracts",
-      "description": "yschimke/compose-preview-contracts — the published wire contracts. They carry the `ee.schimke.composeai` group but are released from their own repository on their own version line (2.x, while compose-ai-tools is on 1.5x.x), so they must not ride the compose-ai-tools group: one group means one shared version ref, and Renovate would raise it to a version the other train never published. Listed by exact artifactId because the two repos' names interleave — `daemon-protocol` is a contract and `daemon-core` is not, `data-render-core` is a contract and `data-render-compose` is not. `screen-document`, `ui-builder-protocol` and `parity-issues-protocol` were missing from this list while three catalogs already resolved them on the shared `composeai-contracts` ref, so they fell into the compose-ai-tools group: that is how compose-preview-daemon#91 (“update compose-ai-tools to v2.17.0”) and #92 (“update compose-preview-contracts to v2.17.0”) ended up as two branches with byte-identical diffs, both rewriting the same version ref.",
+      "description": "yschimke/compose-preview-contracts — the published wire contracts. They carry the `ee.schimke.composeai` group but are released from their own repository on their own version line (2.x, while compose-ai-tools is on 1.5x.x), so they must not ride the compose-ai-tools group: one group means one shared version ref, and Renovate would raise it to a version the other train never published. Listed by exact artifactId because the two repos' names interleave — `daemon-protocol` is a contract and `daemon-core` is not, `data-render-core` is a contract and `data-render-compose` is not. `screen-document`, `ui-builder-protocol` and `parity-issues-protocol` were missing from this list while three catalogs already resolved them on the shared `composeai-contracts` ref, so they fell into the compose-ai-tools group: that is how compose-preview-daemon#91 (“update compose-ai-tools to v2.17.0”) and #92 (“update compose-preview-contracts to v2.17.0”) ended up as two branches with byte-identical diffs, both rewriting the same version ref. `compose-preview-contracts-bom` belongs here for the same reason and is now the line's ONLY versioned coordinate in a consuming catalog: the repository publishes only the modules a release changes, so the coordinates do not all sit at one version and each catalog names versions through this BOM instead. A BOM bump riding the compose-ai-tools group is how compose-ai-tools#5505 took main red — it raised the shared `composeai-contracts` ref off `data-layoutinspector-core`'s lone 3.1.1 and `screen-document` resolved at a version nobody published.",
       "matchPackageNames": [
         "ee.schimke.composeai:daemon-protocol",
         "ee.schimke.composeai:daemon-devices",
@@ -206,7 +206,8 @@
         "ee.schimke.composeai:common-io",
         "ee.schimke.composeai:screen-document",
         "ee.schimke.composeai:ui-builder-protocol",
-        "ee.schimke.composeai:parity-issues-protocol"
+        "ee.schimke.composeai:parity-issues-protocol",
+        "ee.schimke.composeai:compose-preview-contracts-bom"
       ]
     },
     {

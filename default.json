@@ -221,8 +221,9 @@
     },
     {
       "groupName": "rc-players",
-      "description": "yschimke/rc-players — the RemoteCompose players, the fourth train under this group and the one that proved the point. Grouped with compose-ai-tools, Renovate raised a shared version ref to a player-only version and dragged four compose-ai-tools artifacts to a version nobody published (wear-m3-catalog#199).",
+      "description": "yschimke/rc-players — the RemoteCompose players, the fourth train under this group and the one that proved the point. Grouped with compose-ai-tools, Renovate raised a shared version ref to a player-only version and dragged four compose-ai-tools artifacts to a version nobody published (wear-m3-catalog#199). `rc-players-bom` is named exactly because the `rc-player-` prefix does not match it: the `s` sits where the prefix expects the hyphen. Without it the BOM — the one coordinate a consumer that imports the platform actually pins — fell through to the compose-ai-tools group, and compose-ai-tools was offered its rc-players bump inside a compose-ai-tools PR while the matching checkout pin rode a separate rc-players PR at a different version (compose-ai-tools#5570).",
       "matchPackageNames": [
+        "ee.schimke.composeai:rc-players-bom",
         "/^ee\\.schimke\\.composeai:rc-player-/",
         "/^ee\\.schimke\\.composeai:third-party-rc-embedded-player($|-)/",
         "ee.schimke.composeai:remote-compose-player-js-dist"

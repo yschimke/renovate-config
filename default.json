@@ -110,7 +110,7 @@
     },
     {
       "groupName": "compose-ai-tools",
-      "description": "yschimke/compose-ai-tools ships the preview CLI, the `ee.schimke.composeai.preview` Gradle plugin, the discovery / bundle / render-session / render-host artifacts, its own `*-preview-runtime` modules and the reusable CI actions as ONE release, so a pinned action ref and the Gradle coords must move in a single PR — a skew breaks preview discovery outright. This is the BROAD rule for the `ee.schimke.composeai` group, and the FOUR rules after it carve their own trains back out of it; the last match wins, so they stay after it. The annotation, connector, data and renderer artifacts this train used to ship are no longer part of it — they moved to yschimke/compose-preview-daemon at its 3.0.0 (compose-ai-tools#5336) and are carved out immediately below.",
+      "description": "yschimke/compose-ai-tools ships the preview CLI, the `ee.schimke.composeai.preview` Gradle plugin, the discovery / bundle / render-session / render-host artifacts, its own `*-preview-runtime` modules and the reusable CI actions as ONE release, so a pinned action ref and the Gradle coords must move in a single PR — a skew breaks preview discovery outright. This is the BROAD rule for the `ee.schimke.composeai` group, and the FIVE rules after it carve their own trains back out of it; the last match wins, so they stay after it. The annotation, connector, data and renderer artifacts this train used to ship are no longer part of it — they moved to yschimke/compose-preview-daemon at its 3.0.0 (compose-ai-tools#5336) and are carved out immediately below.",
       "matchPackageNames": [
         "yschimke/compose-ai-tools",
         "/^ee\\.schimke\\.composeai($|[.:])/"
@@ -118,10 +118,12 @@
     },
     {
       "groupName": "compose-preview-daemon",
-      "description": "yschimke/compose-preview-daemon \u2014 the renderers, the data extractors, the render daemon and the preview runtimes it hosts. The fifth train under this group, and the one the split left behind: these coordinates moved out of compose-ai-tools at the daemon's 3.0.0 (compose-ai-tools#5336) onto a 3.x line of their own, but no rule followed them, so every one of them fell into the compose-ai-tools group above. rc-players is currently offered `fix(deps): update compose-ai-tools to v3.4.3` for two daemon artifacts, and compose-preview-server has the tools line and the daemon line riding one PR. Listed by exact artifactId, like the contracts and the server, because the names interleave three ways: `data-render-compose` is the daemon's but `data-render-core` is a contract, and `slot-preview-runtime` is the daemon's but `wear-preview-runtime` is compose-ai-tools'. Regenerate the list from that repository with `grep -rhA2 '^  coordinates($' --include=build.gradle.kts . | grep -o '\"[a-z0-9-]*\"'`; a newly published coordinate has to be added by hand or it falls back into compose-ai-tools.",
+      "description": "yschimke/compose-preview-daemon \u2014 the renderers, the data extractors, the render daemon and the preview runtimes it hosts. The fifth train under this group, and the one the split left behind: these coordinates moved out of compose-ai-tools at the daemon's 3.0.0 (compose-ai-tools#5336) onto a 3.x line of their own, but no rule followed them, so every one of them fell into the compose-ai-tools group above. rc-players is currently offered `fix(deps): update compose-ai-tools to v3.4.3` for two daemon artifacts, and compose-preview-server has the tools line and the daemon line riding one PR. Listed by exact artifactId, like the contracts and the server, because the names interleave three ways: `data-render-compose` is the daemon's but `data-render-core` is a contract, and `slot-preview-runtime` is the daemon's but `wear-preview-runtime` is compose-ai-tools'. Regenerate the list from that repository with `grep -rhA2 '^  coordinates($' --include=build.gradle.kts . | grep -o '\"[a-z0-9-]*\"'`; a newly published coordinate has to be added by hand or it falls back into compose-ai-tools. That command only finds the `coordinates(...)` form, so it missed `daemon-connector-api` and `compose-preview-daemon-bom`, which set `artifactId = ...` instead; both fell into compose-ai-tools. The BOM is the one daemon coordinate a BOM-based catalog pins, so it has to sit in this group with the modules it constrains: in compose-ai-tools it would ride a compose-ai-tools PR onto the shared tools ref, which is the compose-ai-tools#5505 failure one layer up.",
       "matchPackageNames": [
+        "ee.schimke.composeai:compose-preview-daemon-bom",
         "ee.schimke.composeai:daemon-android",
         "ee.schimke.composeai:daemon-client",
+        "ee.schimke.composeai:daemon-connector-api",
         "ee.schimke.composeai:daemon-core",
         "ee.schimke.composeai:daemon-desktop",
         "ee.schimke.composeai:data-a11y-connector",
@@ -212,11 +214,17 @@
     },
     {
       "groupName": "compose-preview-server",
-      "description": "yschimke/compose-preview-server — `compose-preview serve` and its render host. Same group coordinate, own repository, own version line again, independent of both compose-ai-tools and the contracts. `compose-preview-ui-builder-export` is the third and was the one missing: wear-m3-catalog resolves it on a `composePreviewServer` ref of its own and it was landing in the compose-ai-tools group. If the server publishes more, add them here rather than letting them fall back into the compose-ai-tools group.",
+      "description": "yschimke/compose-preview-server — `compose-preview serve` and its render host. Same group coordinate, own repository, own version line again, independent of both compose-ai-tools and the contracts. The repository no longer publishes to Maven Central at all (it ships GitHub release assets), so these two only match catalogs still pinned to the releases that did. `compose-preview-ui-builder-export` used to sit here too, but the UI builder moved to yschimke/compose-ui-builder and publishes on that repository's own line, so it belongs to the compose-ui-builder group below; left here it would be bumped against a server line it no longer ships on.",
       "matchPackageNames": [
         "ee.schimke.composeai:compose-preview-serve",
-        "ee.schimke.composeai:compose-preview-render-host",
-        "ee.schimke.composeai:compose-preview-ui-builder-export"
+        "ee.schimke.composeai:compose-preview-render-host"
+      ]
+    },
+    {
+      "groupName": "compose-ui-builder",
+      "description": "yschimke/compose-ui-builder — the UI builder's runtime, render bundle, web editor and export modules plus `compose-preview-ui-builder-bom`, the sixth train under this group, on its own version line. Every coordinate it publishes is `compose-preview-` + its `ui-builder-*` project name (the BOM derives its constraints the same way), so a prefix match is exact here and also covers modules it adds later. Without this rule they all fell into compose-ai-tools, and `-export` sat in the server group from before the move. The BOM rides with its modules so a catalog's BOM ref and any module still pinned beside it move in one PR.",
+      "matchPackageNames": [
+        "/^ee\\.schimke\\.composeai:compose-preview-ui-builder-/"
       ]
     },
     {

@@ -38,8 +38,14 @@ everything else stays small so a single risky bump can't block the safe ones.
   `yschimke/compose-ai-tools` action refs. One release ships all of them, and a
   skew between a pinned action ref and the Gradle coords breaks preview
   discovery.
-- **compose-preview-contracts** — the nine published wire contracts.
-- **compose-preview-server** — `compose-preview-serve` + `compose-preview-render-host`.
+- **compose-preview-daemon** — the renderers, data extractors, render daemon and
+  `compose-preview-daemon-bom`.
+- **compose-preview-contracts** — the published wire contracts and
+  `compose-preview-contracts-bom`.
+- **compose-preview-server** — `compose-preview-serve` + `compose-preview-render-host`
+  (historic coordinates; the server no longer publishes to Maven Central).
+- **compose-ui-builder** — every `compose-preview-ui-builder-*` coordinate,
+  `compose-preview-ui-builder-bom` included.
 - **rc-players** — the RemoteCompose player artifacts.
 
 **Convenience groups** (independent, but low-risk to batch):
@@ -52,9 +58,9 @@ everything else stays small so a single risky bump can't block the safe ones.
 
 **Infra:** `android-gradle-plugin`, `github-actions`.
 
-### One Maven group, five release trains
+### One Maven group, six release trains
 
-`ee.schimke.composeai` is **not** one release train. Five repositories publish
+`ee.schimke.composeai` is **not** one release train. Six repositories publish
 into it, each cutting its own versions:
 
 | Train | Repo | Version line |
@@ -63,21 +69,27 @@ into it, each cutting its own versions:
 | `compose-preview-daemon` | [yschimke/compose-preview-daemon](https://github.com/yschimke/compose-preview-daemon) | `3.x` |
 | `compose-preview-contracts` | [yschimke/compose-preview-contracts](https://github.com/yschimke/compose-preview-contracts) | `2.x` |
 | `compose-preview-server` | [yschimke/compose-preview-server](https://github.com/yschimke/compose-preview-server) | `3.x`, independent of the contracts |
+| `compose-ui-builder` | [yschimke/compose-ui-builder](https://github.com/yschimke/compose-ui-builder) | `3.x`, its own |
 | `rc-players` | yschimke/rc-players | its own, already ahead |
 
 Grouping them together is not just noise, it is wrong: one group means one
 shared version ref in `libs.versions.toml`, and Renovate raises that ref to
-whichever train released last — proposing a version the other four never
+whichever train released last — proposing a version the others never
 published. That is exactly how wear-m3-catalog#199 broke, when the players
 dragged four compose-ai-tools artifacts to a player-only version, and how
 compose-preview-daemon#91 and #92 opened two branches with byte-identical
 diffs, both rewriting one `composeai-contracts` ref.
 
-The `compose-ai-tools` rule matches the whole group; the other four follow it
+The `compose-ai-tools` rule matches the whole group; the other five follow it
 and carve their own coordinates back out. **Order is load-bearing** — Renovate
 applies `packageRules` in sequence and the last match wins, so a repo-local
-rule appended after the preset re-collapses all four unless it splits them the
+rule appended after the preset re-collapses all five unless it splits them the
 same way.
+
+Each train's BOM sits in that train's group, with its modules. A catalog that
+resolves the train through `platform(<bom>)` pins only the BOM; one still
+pinning a module beside it gets the BOM and the module in the same PR, never a
+module bump on its own against a BOM left behind.
 
 The daemon, the contracts and the server are listed by exact artifactId rather
 than by prefix, because the names interleave three ways: `daemon-protocol` is a
@@ -86,7 +98,10 @@ contract but `daemon-core` is the daemon's, `data-render-core` is a contract but
 but `wear-preview-runtime` is compose-ai-tools'. A new published coordinate
 therefore has to be added to the right list by hand; unlisted ones fall into
 `compose-ai-tools`. Regenerate a train's list from its repository with
-`grep -rhA2 '^  coordinates($' --include=build.gradle.kts . | grep -o '"[a-z0-9-]*"'`.
+`grep -rhA2 -E '^  coordinates\($|artifactId *=' --include=build.gradle.kts . | grep -o '"[a-z0-9-]*"'`
+— the `artifactId =` arm is what catches `daemon-connector-api` and the BOMs,
+which the `coordinates(` form alone missed. The UI builder is the exception: all
+of its coordinates are `compose-preview-ui-builder-*`, so its rule is a prefix.
 
 ### Why not "all of AndroidX" in one group?
 

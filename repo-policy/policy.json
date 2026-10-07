@@ -157,7 +157,7 @@
           "~ALL"
         ],
         "exclude": [
-          "refs/heads/agent/**"
+          "refs/heads/agent/**/*"
         ]
       },
       "glimmer-catalog-out": {
@@ -165,7 +165,7 @@
           "~ALL"
         ],
         "exclude": [
-          "refs/heads/agent/**"
+          "refs/heads/agent/**/*"
         ]
       },
       "m3-catalog-out": {
@@ -173,7 +173,7 @@
           "~ALL"
         ],
         "exclude": [
-          "refs/heads/agent/**"
+          "refs/heads/agent/**/*"
         ]
       },
       "remote-m3-catalog-out": {
@@ -181,7 +181,7 @@
           "~ALL"
         ],
         "exclude": [
-          "refs/heads/agent/**"
+          "refs/heads/agent/**/*"
         ]
       },
       "wear-m3-catalog-out": {
@@ -189,7 +189,7 @@
           "~ALL"
         ],
         "exclude": [
-          "refs/heads/agent/**"
+          "refs/heads/agent/**/*"
         ]
       },
       "compose-preview-imports-out": {
@@ -197,7 +197,7 @@
           "~ALL"
         ],
         "exclude": [
-          "refs/heads/agent/**"
+          "refs/heads/agent/**/*"
         ]
       }
     }

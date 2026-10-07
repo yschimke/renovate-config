@@ -33,10 +33,16 @@ check-only mode is what to re-run after anyone changes a setting in the GitHub U
 - a pull request is required (0 approvals — single maintainer), squash the only allowed method;
 - the repository's checks from `policy.json` are required, pinned to the GitHub Actions app so
   no other integration can satisfy one by reporting the same name;
-- **admin bypass in `pull_request` mode**: an admin can land a PR whose checks are red or pending
-  ("Merge without waiting for requirements to be met", or `gh pr merge <n> --squash --admin`),
-  but cannot push or force-push to `main` directly. Every bypass is recorded in the repository's
-  rule insights.
+- **admin bypass in `always` mode**: an admin can land a PR whose checks are red or pending
+  ("Merge without waiting for requirements to be met", the GitHub mobile app's merge button, or
+  `gh pr merge <n> --squash --admin`). Every bypass is recorded in the repository's rule insights.
+
+  `always` rather than `pull_request` is deliberate. `pull_request` ("For pull requests only")
+  would also stop an admin pushing or force-pushing to `main`, but GitHub then reports
+  `viewerCanMergeAsAdmin: false`, and neither the mobile app nor `gh pr merge` offers the bypass —
+  only the merge box on github.com does ([cli/cli#13388](https://github.com/cli/cli/issues/13388)).
+  `exempt` keeps mobile merging but skips the rules silently, with no bypass audit entry, so it
+  is not used. The cost of `always`: an admin's direct or force push to `main` is not blocked.
 
 ## Choosing required checks
 

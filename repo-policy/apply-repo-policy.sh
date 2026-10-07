@@ -5,7 +5,6 @@
 #     open pull requests (release-please, generated-file refreshes)
 #   - one branch ruleset on the default branch: no deletion, no force-push, PR required,
 #     squash the only allowed method, the listed checks required, admins may bypass
-#     through a pull request only (never a direct or force push)
 #
 #   ./apply-repo-policy.sh            # check: print drift, exit 1 if any (read-only)
 #   ./apply-repo-policy.sh --apply    # write the policy

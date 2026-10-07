@@ -162,5 +162,5 @@ why the default here is the Renovate-internal mechanism.
 ## Repository settings
 
 [`repo-policy/`](repo-policy/README.md) holds the merge policy shared by the same repositories —
-squash-only merges, required CI checks, and an admin bypass that works only through a pull
-request — and the script that applies it.
+squash-only merges, required CI checks, and an admin bypass for force-landing a PR — and the
+script that applies it.

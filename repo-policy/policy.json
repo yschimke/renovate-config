@@ -16,7 +16,7 @@
   },
   "ruleset": {
     "name": "Protect Main",
-    "admin_bypass_mode": "pull_request",
+    "admin_bypass_mode": "always",
     "strict_required_status_checks_policy": false
   },
   "repos": {

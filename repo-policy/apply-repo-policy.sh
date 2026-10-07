@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Converges every repository in policy.json on one merge policy:
 #   - repo settings: squash only, PR title as the squash headline, empty body, auto-merge on
+#   - Actions: read-only default GITHUB_TOKEN (jobs declare what they need), and workflows may
+#     open pull requests (release-please, generated-file refreshes)
 #   - one branch ruleset on the default branch: no deletion, no force-push, PR required,
 #     squash the only allowed method, the listed checks required, admins may bypass
 #     through a pull request only (never a direct or force push)
@@ -17,6 +19,10 @@ POLICY=policy.json
 MODE=check; [[ "${1:-}" == --apply ]] && { MODE=apply; shift; }
 OWNER=$(jq -r .owner "$POLICY")
 REPOS=("$@"); ((${#REPOS[@]})) || mapfile -t REPOS < <(jq -r '.repos | keys[]' "$POLICY")
+for repo in "${REPOS[@]}"; do # never touch a repository the policy does not name
+  jq -e --arg r "$repo" '.repos | has($r)' "$POLICY" >/dev/null ||
+    { echo "$repo is not in $POLICY; add it there first" >&2; exit 2; }
+done
 ACTIONS_APP_ID=15368   # GitHub Actions; pins each check to the app that must report it
 drift=0
 
@@ -55,9 +61,22 @@ for repo in "${REPOS[@]}"; do
   have=$(gh api "repos/$full" | jq -S --argjson w "$want" 'with_entries(select(.key as $k | $w | has($k)))')
   if [[ "$want" != "$have" ]]; then
     drift=1; diff <(echo "$have") <(echo "$want") | sed 's/^/   settings /' || true
-    [[ $MODE == apply ]] && gh api -X PATCH "repos/$full" --input <(echo "$want") >/dev/null && echo "   settings: applied"
+    if [[ $MODE == apply ]]; then
+      gh api -X PATCH "repos/$full" --input <(echo "$want") >/dev/null
+      echo "   settings: applied"
+    fi
   fi
-  # 2. the branch ruleset (matched by name, case-insensitively, so "Protect main" is renamed)
+  # 2. Actions workflow permissions
+  want=$(jq -S .actions_workflow_permissions "$POLICY")
+  have=$(gh api "repos/$full/actions/permissions/workflow" | jq -S)
+  if [[ "$want" != "$have" ]]; then
+    drift=1; diff <(echo "$have") <(echo "$want") | grep '^[<>]' | sed 's/^/   actions /' || true
+    if [[ $MODE == apply ]]; then
+      gh api -X PUT "repos/$full/actions/permissions/workflow" --input <(echo "$want") >/dev/null
+      echo "   actions: applied"
+    fi
+  fi
+  # 3. the branch ruleset (matched by name, case-insensitively, so "Protect main" is renamed)
   name=$(jq -r .ruleset.name "$POLICY")
   id=$(gh api "repos/$full/rulesets" --jq "map(select(.name | ascii_downcase == (\"$name\" | ascii_downcase)))[0].id // empty")
   current='{}'; extra=false

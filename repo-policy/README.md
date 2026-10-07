@@ -24,6 +24,8 @@ check-only mode is what to re-run after anyone changes a setting in the GitHub U
 | Squash title / body | `PR_TITLE` / `BLANK` | the PR title is the commit headline even for a one-commit PR, so the `Conventional Commit title` check validates what actually lands; a blank body keeps branch `Co-authored-by:` trailers off `main` |
 | Auto-merge | on | lets GitHub-native auto-merge be used |
 | Delete branch on merge, update-branch button | on | |
+| Actions `GITHUB_TOKEN` default | read-only | every job declares the permissions it needs; a write default hands them to jobs that never asked |
+| Actions may create and approve PRs | on | release-please and the generated-file refreshes open PRs with `GITHUB_TOKEN`; with 0 required approvals, approving grants nothing extra |
 
 **The `Protect Main` ruleset**, on the default branch:
 

@@ -52,7 +52,22 @@ The workflows that write them force-push (a `design-artifacts/*` branch is rewri
 republish), so a force-push rule would break them. No workflow in compose-ai-tools or the
 design-parity driver deletes a branch. Per-PR branches (`ui-builder-designs/pr-N`) are left out.
 
+**Other branches developed through pull requests** (`branch_rulesets`, e.g. wear-m3-catalog's
+`wear-compose-cmp` port lane) get the same ruleset as `main`, named `Protect <branch>` and
+scoped to that branch. `Protect Main` covers only the default branch, so without this a pull
+request into such a branch has no required checks at all.
+
 ## Choosing required checks
+
+Required checks are each repository's **build and unit-test jobs** (`repos` in `policy.json`),
+plus the two **common checks** every repository carries: `Conventional Commit title` (squash
+merges use the PR title as the commit headline) and `Reject agent attribution`. Lint, format,
+render and visual-diff jobs still run and show red on a PR, but they do not block merging.
+
+A common check is required on a branch only once that branch's workflow declares the job, so
+landing the workflow and requiring the check never have to be ordered by hand: re-run the
+script after the workflow merges. Until then the check is reported as `pending`, not drift.
+
 
 A required check must **report on every PR**:
 

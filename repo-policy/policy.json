@@ -123,5 +123,83 @@
       "build",
       "conventional"
     ]
+  },
+  "long_lived_branches": {
+    "ruleset_name": "Protect long-lived branches",
+    "repos": {
+      "wear-m3-catalog": {
+        "include": [
+          "wear-compose-cmp"
+        ]
+      },
+      "compose-preview-vscode": {
+        "include": [
+          "preview/main",
+          "preview/pr"
+        ]
+      },
+      "compose-ui-builder": {
+        "include": [
+          "compose-preview/main",
+          "compose-preview/pr",
+          "ui-builder-designs/main",
+          "ui-builder-designs/wear-m3"
+        ]
+      },
+      "flexpress": {
+        "include": [
+          "compose-preview/main",
+          "compose-preview/pr"
+        ]
+      },
+      "a2ui-catalog-out": {
+        "include": [
+          "~ALL"
+        ],
+        "exclude": [
+          "refs/heads/agent/**"
+        ]
+      },
+      "glimmer-catalog-out": {
+        "include": [
+          "~ALL"
+        ],
+        "exclude": [
+          "refs/heads/agent/**"
+        ]
+      },
+      "m3-catalog-out": {
+        "include": [
+          "~ALL"
+        ],
+        "exclude": [
+          "refs/heads/agent/**"
+        ]
+      },
+      "remote-m3-catalog-out": {
+        "include": [
+          "~ALL"
+        ],
+        "exclude": [
+          "refs/heads/agent/**"
+        ]
+      },
+      "wear-m3-catalog-out": {
+        "include": [
+          "~ALL"
+        ],
+        "exclude": [
+          "refs/heads/agent/**"
+        ]
+      },
+      "compose-preview-imports-out": {
+        "include": [
+          "~ALL"
+        ],
+        "exclude": [
+          "refs/heads/agent/**"
+        ]
+      }
+    }
   }
 }

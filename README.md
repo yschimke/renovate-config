@@ -144,20 +144,17 @@ the next weekly window. No branch protection is required for this to be safe.
 A grouped PR only automerges if **every** update in it qualifies, so a group
 that happens to include a major bump stays manual until the major is handled.
 
-### Switching to instant GitHub-native merge
+### GitHub-native merge in the repositories under `repo-policy/`
 
-If you'd rather have GitHub merge the instant required checks pass (seconds
-instead of ≈an hour):
+The repositories listed in [`repo-policy/policy.json`](repo-policy/policy.json) set
+`"platformAutomerge": true` in their own `renovate.json`: GitHub merges the moment the required
+checks pass, instead of on Renovate's next run. That is safe only because those repositories carry
+the `Protect Main` ruleset, with every CI job that runs on a pull request listed as a required check.
+GitHub auto-merge does not wait for a job that is not required, so **a job added to such a
+repository's CI must be added to its required checks too**, or Renovate PRs stop waiting for it.
 
-1. Enable **Settings → General → Allow auto-merge** on the repo.
-2. Add a branch-protection rule on `main` that **requires** the CI checks
-   (e.g. `Assemble (debug)`, `Unit tests`, `Android lint`, `ktfmt check`).
-   This is essential — with native auto-merge, anything *not* required is not
-   waited on.
-3. Set `"platformAutomerge": true` in this preset.
-
-Without step 2, native auto-merge would merge without waiting for CI, which is
-why the default here is the Renovate-internal mechanism.
+The preset keeps `platformAutomerge: false` because other repositories extend it without any
+required checks, and native auto-merge there would merge without waiting for CI.
 
 ## Repository settings
 

@@ -59,14 +59,19 @@
     ],
     "compose-preview-vscode": [
       "Build and test",
-      "Compare preview captures"
+      "Compare preview captures",
+      "Vendored fixtures match the pinned release"
     ],
     "compose-preview-ide": [
       "plugin"
     ],
     "compose-preview-xr": [
       "build (linux-x86_64)",
-      "renderer-xr (Android/Robolectric)"
+      "renderer-xr (Android/Robolectric)",
+      "build (macos-arm64)",
+      "build (windows-x86_64)",
+      "serve smoke (linux, llvmpipe)",
+      "Generated mirrors match the pinned upstream schemas"
     ],
     "compose-preview-imports": [],
     "compose-ui-builder": [

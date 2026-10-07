@@ -10,6 +10,10 @@
     "delete_branch_on_merge": true,
     "allow_update_branch": true
   },
+  "actions_workflow_permissions": {
+    "default_workflow_permissions": "read",
+    "can_approve_pull_request_reviews": true
+  },
   "ruleset": {
     "name": "Protect Main",
     "admin_bypass_mode": "pull_request",
@@ -17,49 +21,107 @@
   },
   "repos": {
     "compose-ai-tools": [
-      "Plugin Functional Tests", "Plugin Unit Tests", "Agent Audit Samples", "Build CLI",
-      "Conventional Commit title", "wear-os-samples (ComposeStarter)",
-      "wear-os-samples (WearTilesKotlin)", "Reject agent attribution"
+      "Plugin Functional Tests",
+      "Plugin Unit Tests",
+      "Agent Audit Samples",
+      "Build CLI",
+      "Conventional Commit title",
+      "wear-os-samples (ComposeStarter)",
+      "wear-os-samples (WearTilesKotlin)",
+      "Reject agent attribution"
     ],
-    "compose-preview-contracts": ["Check"],
+    "compose-preview-contracts": [
+      "Check"
+    ],
     "compose-preview-daemon": [
-      "Module Unit Tests", "Daemon Android Tests", "Android Lint", "Sidecar archives",
-      "Schema codegen up to date", "ktfmt (Google style)", "Release notes parseable",
-      "Conventional Commit title", "No breaking-change marker", "Reject agent attribution"
+      "Module Unit Tests",
+      "Daemon Android Tests",
+      "Android Lint",
+      "Sidecar archives",
+      "Schema codegen up to date",
+      "ktfmt (Google style)",
+      "Release notes parseable",
+      "Conventional Commit title",
+      "No breaking-change marker",
+      "Reject agent attribution"
     ],
     "compose-preview-server": [
-      "gradle", "visual-harness", "source-gates", "serve-web", "deployment", "selector-fixtures",
-      "ui-builder-contract", "ui-builder-remote-compose",
-      "Conventional Commit title", "Reject agent attribution"
+      "gradle",
+      "visual-harness",
+      "source-gates",
+      "serve-web",
+      "deployment",
+      "selector-fixtures",
+      "ui-builder-contract",
+      "ui-builder-remote-compose",
+      "Conventional Commit title",
+      "Reject agent attribution"
     ],
-    "compose-preview-vscode": ["Build and test", "Compare preview captures"],
-    "compose-preview-ide": ["plugin"],
-    "compose-preview-xr": ["build (linux-x86_64)", "renderer-xr (Android/Robolectric)"],
+    "compose-preview-vscode": [
+      "Build and test",
+      "Compare preview captures"
+    ],
+    "compose-preview-ide": [
+      "plugin"
+    ],
+    "compose-preview-xr": [
+      "build (linux-x86_64)",
+      "renderer-xr (Android/Robolectric)"
+    ],
     "compose-preview-imports": [],
-    "compose-ui-builder": ["gradle", "ui-builder-remote-compose", "ui-builder-contract"],
+    "compose-ui-builder": [
+      "gradle",
+      "ui-builder-remote-compose",
+      "ui-builder-contract"
+    ],
     "m3-catalog": [
-      "Build + discover previews", "Unit tests", "ktfmtCheck", "Validate catalog spec",
-      "design-map.json is current", "Render previews (baseline or PR comment, auto-selected)",
+      "Build + discover previews",
+      "Unit tests",
+      "ktfmtCheck",
+      "Validate catalog spec",
+      "design-map.json is current",
+      "Render previews (baseline or PR comment, auto-selected)",
       "Reject agent attribution"
     ],
     "wear-m3-catalog": [
-      "Build + discover previews", "Unit tests", "ktfmtCheck", "Validate catalog spec",
-      "Figma page resolution", "Render previews (baseline or PR comment, auto-selected)",
+      "Build + discover previews",
+      "Unit tests",
+      "ktfmtCheck",
+      "Validate catalog spec",
+      "Figma page resolution",
+      "Render previews (baseline or PR comment, auto-selected)",
       "Reject agent attribution"
     ],
     "remote-m3-catalog": [
-      "Build + discover previews", "Unit tests", "ktfmtCheck", "Validate catalog spec",
-      "Figma page resolution", "Render previews (baseline or PR comment, auto-selected)",
+      "Build + discover previews",
+      "Unit tests",
+      "ktfmtCheck",
+      "Validate catalog spec",
+      "Figma page resolution",
+      "Render previews (baseline or PR comment, auto-selected)",
       "Reject agent attribution"
     ],
     "glimmer-catalog": [
-      "android-catalogs", "generated-contracts", "cmp-port",
-      "Render previews (baseline or PR comment, auto-selected)", "Reject agent attribution"
+      "android-catalogs",
+      "generated-contracts",
+      "cmp-port",
+      "Render previews (baseline or PR comment, auto-selected)",
+      "Reject agent attribution"
     ],
     "a2ui-catalog": [
-      "Build + discover previews", "Unit tests", "Render both sheets", "A2UI CMP port",
-      "UI-builder renderer runtime", "ktfmtCheck", "Validate catalog specs",
-      "Render previews (baseline or PR comment, auto-selected)", "Reject agent attribution"
+      "Build + discover previews",
+      "Unit tests",
+      "Render both sheets",
+      "A2UI CMP port",
+      "UI-builder renderer runtime",
+      "ktfmtCheck",
+      "Validate catalog specs",
+      "Render previews (baseline or PR comment, auto-selected)",
+      "Reject agent attribution"
+    ],
+    "flexpress": [
+      "build",
+      "conventional"
     ]
   }
 }

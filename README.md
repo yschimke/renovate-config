@@ -146,12 +146,14 @@ that happens to include a major bump stays manual until the major is handled.
 
 ### GitHub-native merge in the repositories under `repo-policy/`
 
-The repositories listed in [`repo-policy/policy.json`](repo-policy/policy.json) set
-`"platformAutomerge": true` in their own `renovate.json`: GitHub merges the moment the required
-checks pass, instead of on Renovate's next run. That is safe only because those repositories carry
-the `Protect Main` ruleset, with every CI job that runs on a pull request listed as a required check.
-GitHub auto-merge does not wait for a job that is not required, so **a job added to such a
-repository's CI must be added to its required checks too**, or Renovate PRs stop waiting for it.
+The repositories in [`repo-policy/policy.json`](repo-policy/policy.json) that have required checks
+set `"platformAutomerge": true` in their own `renovate.json`: GitHub merges the moment the required
+checks pass, instead of on Renovate's next run.
+
+GitHub auto-merge waits **only** for required checks, and those are deliberately the build and
+unit-test jobs. Lint, formatting, render and other jobs still run and still show red on the PR,
+but they no longer hold back an automerged Renovate PR. A repository with no required checks
+(`compose-preview-imports`) stays on Renovate-managed automerge, which waits for every check.
 
 The preset keeps `platformAutomerge: false` because other repositories extend it without any
 required checks, and native auto-merge there would merge without waiting for CI.

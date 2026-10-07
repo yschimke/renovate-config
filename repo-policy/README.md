@@ -44,6 +44,14 @@ check-only mode is what to re-run after anyone changes a setting in the GitHub U
   `exempt` keeps mobile merging but skips the rules silently, with no bypass audit entry, so it
   is not used. The cost of `always`: an admin's direct or force push to `main` is not blocked.
 
+**The `Protect long-lived branches` ruleset**, on the non-default branches listed under
+`long_lived_branches` in `policy.json`: deletion is blocked and nothing else. These are preview
+baselines (`preview/*`, `compose-preview/*`), design records, the Wear Compose port lane
+(`wear-compose-cmp`) and, in the `-out` repositories, every generated branch except `agent/**/*` (any depth).
+The workflows that write them force-push (a `design-artifacts/*` branch is rewritten on every
+republish), so a force-push rule would break them. No workflow in compose-ai-tools or the
+design-parity driver deletes a branch. Per-PR branches (`ui-builder-designs/pr-N`) are left out.
+
 ## Choosing required checks
 
 A required check must **report on every PR**:

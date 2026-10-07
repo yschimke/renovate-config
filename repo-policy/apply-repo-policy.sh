@@ -5,6 +5,8 @@
 #     open pull requests (release-please, generated-file refreshes)
 #   - one branch ruleset on the default branch: no deletion, no force-push, PR required,
 #     squash the only allowed method, the listed checks required, admins may bypass
+#   - a deletion-only ruleset on long-lived non-default branches (baselines, generated output,
+#     port lanes): they may be force-pushed by the workflows that write them, never deleted
 #
 #   ./apply-repo-policy.sh            # check: print drift, exit 1 if any (read-only)
 #   ./apply-repo-policy.sh --apply    # write the policy
@@ -17,9 +19,12 @@ cd "$(dirname "$0")"
 POLICY=policy.json
 MODE=check; [[ "${1:-}" == --apply ]] && { MODE=apply; shift; }
 OWNER=$(jq -r .owner "$POLICY")
-REPOS=("$@"); ((${#REPOS[@]})) || mapfile -t REPOS < <(jq -r '.repos | keys[]' "$POLICY")
+REPOS=("$@")
+((${#REPOS[@]})) ||
+  mapfile -t REPOS < <(jq -r '[.repos, .long_lived_branches.repos | keys[]] | unique[]' "$POLICY")
+in_policy() { jq -e --arg r "$2" --arg s "$1" 'getpath($s / ".") | has($r)' "$POLICY" >/dev/null; }
 for repo in "${REPOS[@]}"; do # never touch a repository the policy does not name
-  jq -e --arg r "$repo" '.repos | has($r)' "$POLICY" >/dev/null ||
+  { in_policy repos "$repo" || in_policy long_lived_branches.repos "$repo"; } ||
     { echo "$repo is not in $POLICY; add it there first" >&2; exit 2; }
 done
 ACTIONS_APP_ID=15368   # GitHub Actions; pins each check to the app that must report it
@@ -46,6 +51,33 @@ desired_ruleset() { # $1 repo, $2 current extra-approval flag
         else [] end))
     }' "$POLICY"
 }
+desired_long_lived() { # $1 repo
+  jq --arg repo "$1" '.long_lived_branches as $l | ($l.repos[$repo]) as $b
+    | def ref: if startswith("~") or startswith("refs/") then . else "refs/heads/" + . end; {
+      name: $l.ruleset_name, target: "branch", enforcement: "active",
+      conditions: {ref_name: {include: [$b.include[] | ref], exclude: [($b.exclude // [])[] | ref]}},
+      bypass_actors: [{actor_id: 5, actor_type: "RepositoryRole", bypass_mode: .ruleset.admin_bypass_mode}],
+      rules: [{type: "deletion"}]
+    }' "$POLICY"
+}
+# converge_ruleset <owner/repo> <desired json> <label>: create, or update the ruleset with the same
+# name (case-insensitively, so "Protect main" is renamed); print drift, write only with --apply
+converge_ruleset() {
+  local full=$1 desired=$2 label=$3 name id current
+  name=$(jq -r .name <<<"$desired")
+  id=$(gh api "repos/$full/rulesets" --jq "map(select(.name | ascii_downcase == (\"$name\" | ascii_downcase)))[0].id // empty")
+  current='{}'; [[ -n "$id" ]] && current=$(gh api "repos/$full/rulesets/$id")
+  if [[ -z "$id" ]] || [[ "$(normalize <<<"$current")" != "$(normalize <<<"$desired")" ]]; then
+    drift=1
+    if [[ -z "$id" ]]; then echo "   $label: missing"
+    else diff <(normalize <<<"$current") <(normalize <<<"$desired") | grep '^[<>]' | grep -vE '^\S+\s+[{}],?$' | sed "s/^/   $label /" || true; fi
+    if [[ $MODE == apply ]]; then
+      if [[ -z "$id" ]]; then gh api -X POST "repos/$full/rulesets" --input <(echo "$desired") >/dev/null
+      else gh api -X PUT "repos/$full/rulesets/$id" --input <(echo "$desired") >/dev/null; fi
+      echo "   $label: applied"
+    fi
+  fi
+}
 normalize() { # comparable form: rules and checks sorted, server-only fields dropped
   jq -S '{name, target, enforcement, conditions, bypass_actors,
     rules: ([.rules[] | {type, parameters: (.parameters // null)}
@@ -55,6 +87,7 @@ normalize() { # comparable form: rules and checks sorted, server-only fields dro
 
 for repo in "${REPOS[@]}"; do
   full="$OWNER/$repo"; echo "== $full"
+  if in_policy repos "$repo"; then
   # 1. repository merge settings
   want=$(jq -S .repo_settings "$POLICY")
   have=$(gh api "repos/$full" | jq -S --argjson w "$want" 'with_entries(select(.key as $k | $w | has($k)))')
@@ -75,25 +108,15 @@ for repo in "${REPOS[@]}"; do
       echo "   actions: applied"
     fi
   fi
-  # 3. the branch ruleset (matched by name, case-insensitively, so "Protect main" is renamed)
-  name=$(jq -r .ruleset.name "$POLICY")
-  id=$(gh api "repos/$full/rulesets" --jq "map(select(.name | ascii_downcase == (\"$name\" | ascii_downcase)))[0].id // empty")
-  current='{}'; extra=false
-  if [[ -n "$id" ]]; then
-    current=$(gh api "repos/$full/rulesets/$id")
-    extra=$(jq '[.rules[] | select(.type=="pull_request") | .parameters.require_extra_approval_for_unattributed_changes][0] // false' <<<"$current")
+  # 3. the default-branch ruleset
+  id=$(gh api "repos/$full/rulesets" --jq "map(select(.name | ascii_downcase == (\"$(jq -r .ruleset.name "$POLICY")\" | ascii_downcase)))[0].id // empty")
+  extra=false
+  [[ -n "$id" ]] && extra=$(gh api "repos/$full/rulesets/$id" --jq '[.rules[] | select(.type=="pull_request") | .parameters.require_extra_approval_for_unattributed_changes][0] // false')
+  converge_ruleset "$full" "$(desired_ruleset "$repo" "$extra")" ruleset
   fi
-  desired=$(desired_ruleset "$repo" "$extra")
-  if [[ -z "$id" ]] || [[ "$(normalize <<<"$current")" != "$(normalize <<<"$desired")" ]]; then
-    drift=1
-    if [[ -z "$id" ]]; then echo "   ruleset: missing"
-    else diff <(normalize <<<"$current") <(normalize <<<"$desired") | grep '^[<>]' | grep -vE '^\S+\s+[{}],?$' | sed 's/^/   ruleset /' || true; fi
-    if [[ $MODE == apply ]]; then
-      if [[ -z "$id" ]]; then gh api -X POST "repos/$full/rulesets" --input <(echo "$desired") >/dev/null
-      else gh api -X PUT "repos/$full/rulesets/$id" --input <(echo "$desired") >/dev/null; fi
-      echo "   ruleset: applied"
-    fi
-  fi
+  # 4. long-lived branches: deletion blocked
+  in_policy long_lived_branches.repos "$repo" &&
+    converge_ruleset "$full" "$(desired_long_lived "$repo")" branches
 done
 [[ $MODE == apply ]] && exit 0
 exit $drift

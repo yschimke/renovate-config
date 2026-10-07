@@ -158,3 +158,9 @@ instead of ≈an hour):
 
 Without step 2, native auto-merge would merge without waiting for CI, which is
 why the default here is the Renovate-internal mechanism.
+
+## Repository settings
+
+[`repo-policy/`](repo-policy/README.md) holds the merge policy shared by the same repositories —
+squash-only merges, required CI checks, and an admin bypass that works only through a pull
+request — and the script that applies it.

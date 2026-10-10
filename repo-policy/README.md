@@ -85,3 +85,18 @@ The longer-term shape is one aggregate gate job per repository — `compose-prev
 `gradle` job is the pattern: `needs:` the jobs it covers, `if: !cancelled()`, and fail unless
 every result is `success`. Then the list here shrinks to the gate plus `Conventional Commit
 title` and `Reject agent attribution`, and adding or renaming a job never touches the ruleset.
+
+## Agent repositories
+
+`skills` and `compose-agent-plugins` use the same merge settings and common
+checks. Their required validation jobs are `Validate manifests and skills`
+and `validate`, respectively. To apply just these repositories with an owner
+credential that has Administration access:
+
+```sh
+./apply-repo-policy.sh --apply skills compose-agent-plugins
+./apply-repo-policy.sh skills compose-agent-plugins
+```
+
+Apply again after their common-check workflows merge: the script requires
+those checks only once their jobs exist on the default branch.

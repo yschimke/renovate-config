@@ -86,6 +86,12 @@
     ],
     "flexpress": [
       "build"
+    ],
+    "skills": [
+      "Validate manifests and skills"
+    ],
+    "compose-agent-plugins": [
+      "validate"
     ]
   },
   "branch_rulesets": {

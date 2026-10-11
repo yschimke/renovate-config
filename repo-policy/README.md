@@ -100,3 +100,16 @@ credential that has Administration access:
 
 Apply again after their common-check workflows merge: the script requires
 those checks only once their jobs exist on the default branch.
+
+## App repositories
+
+`cadence`, `meshcore-mobile` and `homeassistant-remotecompose` carry their own PR-title and
+attribution workflows (`pr-title.yml`, `no-ai-coauthors.yml`) under different job names than the
+common checks, so the common checks stay `pending` there. Their equivalents — `Validate PR title
+(conventional commits)` and `Scan commits and PR body` — are listed as the repository's own
+required checks instead, next to the assemble and `Unit tests` jobs. Android lint and the
+instrumented / iOS jobs run but do not block merging.
+
+```sh
+./apply-repo-policy.sh --apply cadence meshcore-mobile homeassistant-remotecompose
+```

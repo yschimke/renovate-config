@@ -92,6 +92,24 @@
     ],
     "compose-agent-plugins": [
       "validate"
+    ],
+    "cadence": [
+      "Assemble debug APK",
+      "Unit tests",
+      "Validate PR title (conventional commits)",
+      "Scan commits and PR body"
+    ],
+    "meshcore-mobile": [
+      "Assemble (debug)",
+      "Unit tests",
+      "Validate PR title (conventional commits)",
+      "Scan commits and PR body"
+    ],
+    "homeassistant-remotecompose": [
+      "Assemble (debug)",
+      "Unit tests",
+      "Validate PR title (conventional commits)",
+      "Scan commits and PR body"
     ]
   },
   "branch_rulesets": {

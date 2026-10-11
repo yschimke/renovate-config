@@ -158,6 +158,21 @@ but they no longer hold back an automerged Renovate PR. A repository with no req
 The preset keeps `platformAutomerge: false` because other repositories extend it without any
 required checks, and native auto-merge there would merge without waiting for CI.
 
+### Rebasing only on conflict
+
+The preset sets `rebaseWhen: "conflicted"`. Renovate's default (`auto`) rebases an automerging
+branch every time its base moves, and every rebase reruns the full CI matrix. On these busy
+repositories that churn was the largest single consumer of the account's shared runner pool:
+over 48 hours to 2026-10-11, `renovate/compose-ai-tools` ran CI 24–28 times in meshcore-mobile and
+homeassistant-remotecompose, and compose-ui-builder's compose-preview-server digest branch ran it
+32 times in 16 hours, each run queued behind every other PR. With CI plus queueing slower than
+`main` moved, a branch could be rebased again before its checks finished and never land.
+
+Staying behind the base is safe here because the `Protect Main` ruleset does not require branches
+to be up to date (`strict_required_status_checks_policy: false` in
+[`repo-policy/policy.json`](repo-policy/policy.json)), the same as for every human PR. A branch is
+still rebased when it conflicts, and a single PR can be rebased on demand from its checkbox.
+
 ## Repository settings
 
 [`repo-policy/`](repo-policy/README.md) holds the merge policy shared by the same repositories —

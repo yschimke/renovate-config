@@ -14,6 +14,7 @@
   "rangeStrategy": "pin",
   "platformAutomerge": false,
   "automergeSchedule": ["at any time"],
+  "rebaseWhen": "conflicted",
   "packageRules": [
     {
       "description": "A -SNAPSHOT is never an upgrade target. Renovate's gradle versioning ranks `1.0.0-SNAPSHOT` ABOVE `1.0.0-alpha18`, so an upstream that publishes snapshots into a repository the build already reads is offered as if it were a release \u2014 rc-players is currently offered `androidx.compose.remote:* 1.0.0-alpha18 -> 1.0.0-SNAPSHOT` on seven coordinates at once. Filtering the suffix out of the candidate list rather than disabling the update keeps the next genuine release on offer, and leaves a repo that deliberately sits ON a snapshot where it is. A repo-local rule that sets `allowedVersions` for the whole gradle manager REPLACES this one for those deps \u2014 last match wins on the same field \u2014 so such a rule has to carry the suffix itself.",

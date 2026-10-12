@@ -7,7 +7,6 @@
     ":semanticCommits"
   ],
   "labels": ["dependencies"],
-  "schedule": ["before 6am on monday"],
   "timezone": "Europe/London",
   "prConcurrentLimit": 5,
   "prHourlyLimit": 0,

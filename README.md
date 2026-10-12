@@ -143,10 +143,13 @@ click.
 
 The preset uses `platformAutomerge: false`, so **Renovate itself waits for all
 checks to pass** and then merges — it can't merge ahead of CI, and it honours
-*every* workflow, not just the ones marked required. PR creation stays on the
-weekly `schedule`, but `automergeSchedule: ["at any time"]` lets a
-newly-green PR merge on the next Renovate run (≈hourly) instead of waiting for
-the next weekly window. No branch protection is required for this to be safe.
+*every* workflow, not just the ones marked required. The preset sets no
+`schedule`, so updates are proposed on any Renovate run (≈hourly on the hosted
+app) as soon as they are published, and `automergeSchedule: ["at any time"]`
+lets a newly-green PR merge on the next run. Renovate's own run cadence is the
+only delay; any soak comes from `minimumReleaseAge` (14 days for majors here,
+plus whatever a repository sets locally), not from a weekly window. No branch
+protection is required for this to be safe.
 
 A grouped PR only automerges if **every** update in it qualifies, so a group
 that happens to include a major bump stays manual until the major is handled.

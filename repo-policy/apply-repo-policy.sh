@@ -92,6 +92,10 @@ required_checks() {
     body=$(gh api "repos/$full/contents/.github/workflows/$wf?ref=$branch" --jq .content 2>/dev/null | base64 -d 2>/dev/null || true)
     if grep -qE "^\s+name: ['\"]?$check['\"]?\s*$" <<<"$body"; then
       checks=$(jq -c --arg c "$check" '. + [$c]' <<<"$checks")
+      # A PR opened with GITHUB_TOKEN gets no pull_request run, so it can only get this check by
+      # dispatching the workflow (README: "Pull requests a workflow opens").
+      grep -qE '^\s+workflow_dispatch:' <<<"$body" ||
+        echo "   note: $wf on $branch takes no workflow_dispatch; workflow-opened PRs never get '$check'" >&2
     else
       echo "   pending: '$check' is not a job in $wf on $branch yet" >&2
     fi

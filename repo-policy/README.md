@@ -77,6 +77,37 @@ A required check must **report on every PR**:
 - Renaming a job that is a required check blocks every PR until `policy.json` is updated and
   re-applied. Change both in the same sitting.
 
+### Pull requests a workflow opens
+
+release-please and the asset syncs (compose-preview-mcp's `Sync server assets`,
+compose-agent-plugins' `Sync viewer`) open their pull requests with `GITHUB_TOKEN`, and GitHub
+starts no workflow for anything that token does. Such a PR never gets a `pull_request` run, so
+the two common checks stay "Expected — waiting", and auto-merge on it never fires.
+
+The fix is in each repository, since the required checks must still come from the GitHub Actions
+app:
+
+- `pr-title.yml` and `no-agent-attribution.yml` also take `workflow_dispatch` with a `pr` input.
+  A dispatched run reports the same check name on the branch head, checks that the PR's head is
+  that commit, and reads the title, body and commit range from the PR.
+- The workflow that opens or updates the PR then dispatches both on the PR's branch:
+
+  ```sh
+  gh workflow run pr-title.yml --ref "$BRANCH" -f pr="$number"
+  gh workflow run no-agent-attribution.yml --ref "$BRANCH" -f pr="$number"
+  ```
+
+  It dispatches the repository's own CI the same way, since that is required too.
+
+  Dispatching needs `permissions: actions: write` on that job, because the policy makes
+  `GITHUB_TOKEN` read-only by default.
+
+A dispatch runs the workflow file as it is on that branch, so a branch cut before the workflow
+learned `workflow_dispatch` cannot be dispatched. Re-run the sync, or rebase the branch, once the
+change is on `main`. The script prints a `note:` for each repository whose common-check workflow
+does not take `workflow_dispatch` yet. That is not drift, because only repositories with
+workflow-opened PRs need it.
+
 So path-filtered workflows (`plugin-pin`, `e2e-external`, `catalog-registry`'s `lint`) are left
 out, and a repository whose jobs are only path-filtered (`compose-preview-imports`) gets the
 ruleset with no required checks.

@@ -10,7 +10,10 @@
 #     the workflow job that reports it, so adding one never wedges open pull requests
 #   - the same ruleset on any other branch developed through pull requests (branch_rulesets)
 #   - a deletion-only ruleset on long-lived non-default branches (baselines, generated output,
-#     port lanes): they may be force-pushed by the workflows that write them, never deleted
+#     port lanes): they may be force-pushed by the workflows that write them, never deleted.
+#     Every repository of the owner named *-out (long_lived_branches.generated_repos) gets it
+#     on all its branches, found by listing the owner's repositories, so a new output
+#     repository is covered without an entry here
 #
 #   ./apply-repo-policy.sh            # check: print drift, exit 1 if any (read-only)
 #   ./apply-repo-policy.sh --apply    # write the policy
@@ -23,12 +26,20 @@ cd "$(dirname "$0")"
 POLICY=policy.json
 MODE=check; [[ "${1:-}" == --apply ]] && { MODE=apply; shift; }
 OWNER=$(jq -r .owner "$POLICY")
+GENERATED_SUFFIX=$(jq -r '.long_lived_branches.generated_repos.suffix // empty' "$POLICY")
 REPOS=("$@")
 ((${#REPOS[@]})) ||
-  mapfile -t REPOS < <(jq -r '[.repos, .long_lived_branches.repos, .branch_rulesets | keys[]] | unique[]' "$POLICY")
+  mapfile -t REPOS < <({
+    jq -r '[.repos, .long_lived_branches.repos, .branch_rulesets | keys[]] | unique[]' "$POLICY"
+    # Every unarchived output repository the owner has, private ones included.
+    [[ -z "$GENERATED_SUFFIX" ]] || gh repo list "$OWNER" --limit 1000 --no-archived --json name \
+      --jq ".[].name | select(endswith(\"$GENERATED_SUFFIX\"))"
+  } | sort -u)
 in_policy() { jq -e --arg r "$2" --arg s "$1" 'getpath($s / ".") | has($r)' "$POLICY" >/dev/null; }
-for repo in "${REPOS[@]}"; do # never touch a repository the policy does not name
-  { in_policy repos "$repo" || in_policy long_lived_branches.repos "$repo" || in_policy branch_rulesets "$repo"; } ||
+generated() { [[ -n "$GENERATED_SUFFIX" && "$1" == *"$GENERATED_SUFFIX" ]]; }
+for repo in "${REPOS[@]}"; do # never touch a repository the policy does not name or match
+  { in_policy repos "$repo" || in_policy long_lived_branches.repos "$repo" || in_policy branch_rulesets "$repo" ||
+    generated "$repo"; } ||
     { echo "$repo is not in $POLICY; add it there first" >&2; exit 2; }
 done
 ACTIONS_APP_ID=15368   # GitHub Actions; pins each check to the app that must report it
@@ -56,8 +67,10 @@ desired_ruleset() {
         else [] end))
     }' "$POLICY"
 }
-desired_long_lived() { # $1 repo
-  jq --arg repo "$1" '.long_lived_branches as $l | ($l.repos[$repo]) as $b
+desired_long_lived() { # $1 repo: its own entry, else the generated-repository branches
+  jq --arg repo "$1" '.long_lived_branches as $l
+    | ($l.repos[$repo] // (if $l.generated_repos and ($repo | endswith($l.generated_repos.suffix))
+        then $l.generated_repos else null end)) as $b
     | def ref: if startswith("~") or startswith("refs/") then . else "refs/heads/" + . end; {
       name: $l.ruleset_name, target: "branch", enforcement: "active",
       conditions: {ref_name: {include: [$b.include[] | ref], exclude: [($b.exclude // [])[] | ref]}},
@@ -153,7 +166,7 @@ for repo in "${REPOS[@]}"; do
     converge_ruleset "$full" "$(desired_ruleset "$name" "refs/heads/$branch" "$checks" "$(extra_approval "$full" "$name")")" "$branch"
   done < <(jq -r --arg r "$repo" '(.branch_rulesets[$r] // [])[] | [.branch, (.checks | tojson)] | @tsv' "$POLICY")
   # 5. long-lived branches: deletion blocked
-  if in_policy long_lived_branches.repos "$repo"; then
+  if in_policy long_lived_branches.repos "$repo" || generated "$repo"; then
     converge_ruleset "$full" "$(desired_long_lived "$repo")" branches
   fi
 done

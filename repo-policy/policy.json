@@ -127,6 +127,15 @@
   },
   "long_lived_branches": {
     "ruleset_name": "Protect long-lived branches",
+    "generated_repos": {
+      "suffix": "-out",
+      "include": [
+        "~ALL"
+      ],
+      "exclude": [
+        "refs/heads/agent/**/*"
+      ]
+    },
     "repos": {
       "wear-m3-catalog": {
         "include": [
@@ -151,70 +160,6 @@
         "include": [
           "compose-preview/main",
           "compose-preview/pr"
-        ]
-      },
-      "a2ui-catalog-out": {
-        "include": [
-          "~ALL"
-        ],
-        "exclude": [
-          "refs/heads/agent/**/*"
-        ]
-      },
-      "glimmer-catalog-out": {
-        "include": [
-          "~ALL"
-        ],
-        "exclude": [
-          "refs/heads/agent/**/*"
-        ]
-      },
-      "m3-catalog-out": {
-        "include": [
-          "~ALL"
-        ],
-        "exclude": [
-          "refs/heads/agent/**/*"
-        ]
-      },
-      "remote-m3-catalog-out": {
-        "include": [
-          "~ALL"
-        ],
-        "exclude": [
-          "refs/heads/agent/**/*"
-        ]
-      },
-      "wear-m3-catalog-out": {
-        "include": [
-          "~ALL"
-        ],
-        "exclude": [
-          "refs/heads/agent/**/*"
-        ]
-      },
-      "compose-preview-imports-out": {
-        "include": [
-          "~ALL"
-        ],
-        "exclude": [
-          "refs/heads/agent/**/*"
-        ]
-      },
-      "meshcore-mobile-out": {
-        "include": [
-          "~ALL"
-        ],
-        "exclude": [
-          "refs/heads/agent/**/*"
-        ]
-      },
-      "homeassistant-remotecompose-out": {
-        "include": [
-          "~ALL"
-        ],
-        "exclude": [
-          "refs/heads/agent/**/*"
         ]
       }
     }

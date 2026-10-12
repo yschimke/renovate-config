@@ -99,6 +99,9 @@ app:
 
   It dispatches the repository's own CI the same way, since that is required too.
 
+  Dispatching needs `permissions: actions: write` on that job, because the policy makes
+  `GITHUB_TOKEN` read-only by default.
+
 A dispatch runs the workflow file as it is on that branch, so a branch cut before the workflow
 learned `workflow_dispatch` cannot be dispatched. Re-run the sync, or rebase the branch, once the
 change is on `main`. The script prints a `note:` for each repository whose common-check workflow

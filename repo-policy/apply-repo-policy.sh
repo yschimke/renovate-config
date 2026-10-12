@@ -27,14 +27,18 @@ POLICY=policy.json
 MODE=check; [[ "${1:-}" == --apply ]] && { MODE=apply; shift; }
 OWNER=$(jq -r .owner "$POLICY")
 GENERATED_SUFFIX=$(jq -r '.long_lived_branches.generated_repos.suffix // empty' "$POLICY")
+# No mapfile, and no comment inside a process substitution: macOS's /bin/bash is 3.2, which has
+# neither the builtin nor a parser that reads such a comment as one.
+listed_repos() {
+  jq -r '[.repos, .long_lived_branches.repos, .branch_rulesets | keys[]] | unique[]' "$POLICY"
+  # Every unarchived output repository the owner has, private ones included.
+  [[ -z "$GENERATED_SUFFIX" ]] || gh repo list "$OWNER" --limit 1000 --no-archived --json name \
+    --jq ".[].name | select(endswith(\"$GENERATED_SUFFIX\"))"
+}
 REPOS=("$@")
-((${#REPOS[@]})) ||
-  mapfile -t REPOS < <({
-    jq -r '[.repos, .long_lived_branches.repos, .branch_rulesets | keys[]] | unique[]' "$POLICY"
-    # Every unarchived output repository the owner has, private ones included.
-    [[ -z "$GENERATED_SUFFIX" ]] || gh repo list "$OWNER" --limit 1000 --no-archived --json name \
-      --jq ".[].name | select(endswith(\"$GENERATED_SUFFIX\"))"
-  } | sort -u)
+if ((${#REPOS[@]} == 0)); then
+  while IFS= read -r repo; do [[ -z "$repo" ]] || REPOS+=("$repo"); done < <(listed_repos | sort -u)
+fi
 in_policy() { jq -e --arg r "$2" --arg s "$1" 'getpath($s / ".") | has($r)' "$POLICY" >/dev/null; }
 generated() { [[ -n "$GENERATED_SUFFIX" && "$1" == *"$GENERATED_SUFFIX" ]]; }
 for repo in "${REPOS[@]}"; do # never touch a repository the policy does not name or match

@@ -48,6 +48,13 @@ everything else stays small so a single risky bump can't block the safe ones.
   `compose-preview-ui-builder-bom` included.
 - **rc-players** — the RemoteCompose player artifacts.
 
+**compose-preview-mcp** ([yschimke/compose-preview-mcp](https://github.com/yschimke/compose-preview-mcp),
+`4.x`) is a release train with no rule here, on purpose: it publishes no Maven coordinate. Its
+artifacts are GitHub release assets — the `compose-preview-mcp` distribution, which the CLI's
+`mcp serve` resolves at run time, and the viewer it re-publishes from compose-preview-server — so
+nothing a catalog pins can belong to it. It extends this preset as a consumer, and
+`repo-policy/policy.json` requires its `gradle` check.
+
 **Convenience groups** (independent, but low-risk to batch):
 
 - **kotlinx** — coroutines / serialization / io / datetime.

@@ -47,6 +47,9 @@
     "compose-preview-server": [
       "gradle"
     ],
+    "compose-preview-mcp": [
+      "gradle"
+    ],
     "compose-preview-vscode": [
       "Build and test"
     ],

@@ -200,6 +200,22 @@
         "exclude": [
           "refs/heads/agent/**/*"
         ]
+      },
+      "meshcore-mobile-out": {
+        "include": [
+          "~ALL"
+        ],
+        "exclude": [
+          "refs/heads/agent/**/*"
+        ]
+      },
+      "homeassistant-remotecompose-out": {
+        "include": [
+          "~ALL"
+        ],
+        "exclude": [
+          "refs/heads/agent/**/*"
+        ]
       }
     }
   }

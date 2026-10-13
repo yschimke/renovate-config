@@ -113,6 +113,9 @@
       "Unit tests",
       "Validate PR title (conventional commits)",
       "Scan commits and PR body"
+    ],
+    "compose-preview-bazel": [
+      "Bazel rules validation"
     ]
   },
   "branch_rulesets": {

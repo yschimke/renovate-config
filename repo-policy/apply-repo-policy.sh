@@ -119,12 +119,17 @@ required_checks() {
   done < <(jq -r '.common_required_checks[] | [.check, .workflow] | @tsv' "$POLICY")
   echo "$checks"
 }
-# extra_approval <owner/repo> <ruleset name>: keep the repository's own setting for this flag
+# extra_approval <owner/repo> <ruleset name> [retired names...]: keep the repository's own setting
+# for this flag; before the policy's ruleset exists, read it from a ruleset it retires instead
 extra_approval() {
-  local id
-  id=$(gh api "repos/$1/rulesets" --jq "map(select(.name | ascii_downcase == (\"$2\" | ascii_downcase)))[0].id // empty")
+  local full=$1 id name
+  shift
+  for name in "$@"; do
+    id=$(gh api "repos/$full/rulesets" --jq "map(select(.name | ascii_downcase == (\"$name\" | ascii_downcase)))[0].id // empty")
+    [[ -z "$id" ]] || break
+  done
   [[ -n "$id" ]] || { echo false; return; }
-  gh api "repos/$1/rulesets/$id" --jq '[.rules[] | select(.type=="pull_request") | .parameters.require_extra_approval_for_unattributed_changes][0] // false'
+  gh api "repos/$full/rulesets/$id" --jq '[.rules[] | select(.type=="pull_request") | .parameters.require_extra_approval_for_unattributed_changes][0] // false'
 }
 normalize() { # comparable form: rules and checks sorted, server-only fields dropped
   jq -S '{name, target, enforcement, conditions, bypass_actors,
@@ -160,7 +165,9 @@ for repo in "${REPOS[@]}"; do
   name=$(jq -r .ruleset.name "$POLICY")
   default=$(gh api "repos/$full" --jq .default_branch)
   checks=$(required_checks "$full" "$default" "$(jq -c --arg r "$repo" '.repos[$r]' "$POLICY")")
-  converge_ruleset "$full" "$(desired_ruleset "$name" "~DEFAULT_BRANCH" "$checks" "$(extra_approval "$full" "$name")")" ruleset
+  retired=()
+  while IFS= read -r r; do [[ -z "$r" ]] || retired+=("$r"); done < <(jq -r --arg r "$repo" '(.retired_rulesets[$r] // [])[]' "$POLICY")
+  converge_ruleset "$full" "$(desired_ruleset "$name" "~DEFAULT_BRANCH" "$checks" "$(extra_approval "$full" "$name" ${retired[@]+"${retired[@]}"})")" ruleset
   fi
   # 4. other branches developed through pull requests: the same ruleset, scoped to the branch
   while IFS=$'\t' read -r branch own; do
@@ -169,7 +176,19 @@ for repo in "${REPOS[@]}"; do
     checks=$(required_checks "$full" "$branch" "$own")
     converge_ruleset "$full" "$(desired_ruleset "$name" "refs/heads/$branch" "$checks" "$(extra_approval "$full" "$name")")" "$branch"
   done < <(jq -r --arg r "$repo" '(.branch_rulesets[$r] // [])[] | [.branch, (.checks | tojson)] | @tsv' "$POLICY")
-  # 5. long-lived branches: deletion blocked
+  # 5. rulesets the policy replaces (a hand-made one left from before the repository joined it):
+  #    they would keep requiring their old checks next to the policy's own ruleset
+  while IFS= read -r retired; do
+    [[ -n "$retired" ]] || continue
+    id=$(gh api "repos/$full/rulesets" --jq "map(select(.name == \"$retired\"))[0].id // empty")
+    [[ -n "$id" ]] || continue
+    drift=1; echo "   retired ruleset '$retired': still present"
+    if [[ $MODE == apply ]]; then
+      gh api -X DELETE "repos/$full/rulesets/$id" >/dev/null
+      echo "   retired ruleset '$retired': deleted"
+    fi
+  done < <(jq -r --arg r "$repo" '(.retired_rulesets[$r] // [])[]' "$POLICY")
+  # 6. long-lived branches: deletion blocked
   if in_policy long_lived_branches.repos "$repo" || generated "$repo"; then
     converge_ruleset "$full" "$(desired_long_lived "$repo")" branches
   fi

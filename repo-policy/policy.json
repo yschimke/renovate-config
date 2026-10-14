@@ -116,6 +116,15 @@
     ],
     "compose-preview-bazel": [
       "Bazel rules validation"
+    ],
+    "compose-ai-contrib": [
+      "Reject AI agent branch names",
+      "Scan commits and PR body"
+    ]
+  },
+  "retired_rulesets": {
+    "compose-ai-contrib": [
+      "main"
     ]
   },
   "branch_rulesets": {

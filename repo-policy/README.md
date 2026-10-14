@@ -129,6 +129,26 @@ The longer-term shape is one aggregate gate job per repository — `compose-prev
 every result is `success`. Then the list here shrinks to the gate plus `Conventional Commit
 title` and `Reject agent attribution`, and adding or renaming a job never touches the ruleset.
 
+## compose-ai-contrib
+
+Almost every job in compose-ai-contrib is path-filtered: each of the Amper, Bazel, Buck2 and
+scripting fixtures builds only when its own directory changes. That includes the four
+end-to-end `*-apply` jobs. Its hand-made `main` ruleset required those four, so a pull request
+touching any other fixture waited on them forever and could land only by admin bypass. It joins
+the policy with the checks that report on every pull request: the two jobs of its
+`no-ai-coauthors.yml` (`Reject AI agent branch names`, `Scan commits and PR body`). Once a
+`pr-title.yml` with `Conventional Commit title` lands there, that common check is required too.
+`retired_rulesets` lists the old `main` ruleset, so `--apply` deletes it next to creating
+`Protect Main`; until then the check run reports it as drift.
+
+```sh
+./apply-repo-policy.sh --apply compose-ai-contrib
+```
+
+The fixture jobs still run and show red on a pull request; they gate nothing. Requiring them
+again means one aggregate gate job (see above) that runs on every pull request and skips the
+fixtures a change does not touch.
+
 ## Agent repositories
 
 `skills` and `compose-agent-plugins` use the same merge settings and common

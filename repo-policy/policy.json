@@ -115,7 +115,10 @@
       "Scan commits and PR body"
     ],
     "compose-preview-bazel": [
-      "Bazel rules validation"
+      "Bazel rules validation",
+      "Analysis tests",
+      "Android aspect",
+      "External Compose consumer"
     ],
     "compose-ai-contrib": [
       "Reject AI agent branch names",

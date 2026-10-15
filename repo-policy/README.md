@@ -149,6 +149,22 @@ The fixture jobs still run and show red on a pull request; they gate nothing. Re
 again means one aggregate gate job (see above) that runs on every pull request and skips the
 fixtures a change does not touch.
 
+## compose-preview-bazel
+
+Besides `Bazel rules validation`, compose-preview-bazel requires `Analysis tests`, `Android
+aspect` and `External Compose consumer`. The last is an end-to-end render, which the rule above
+would leave non-blocking. It is required here because it is the only test of the render
+toolchain and the external-archive path. These three jobs are also the ones a contributor can
+least easily run locally: they need Bazel, an Android SDK and the compose-ai-tools CLI.
+compose-preview-bazel#18 auto-merged a minute after opening because only `Bazel rules validation`
+was required, while all three were still running. All four jobs run on every pull request with
+no `paths:` filter or job-level `if:`. Its release PRs get them through the same dispatch as the
+common checks.
+
+```sh
+./apply-repo-policy.sh --apply compose-preview-bazel
+```
+
 ## Agent repositories
 
 `skills` and `compose-agent-plugins` use the same merge settings and common

@@ -76,7 +76,8 @@
     ],
     "remote-m3-catalog": [
       "Build + discover previews",
-      "Unit tests"
+      "Unit tests",
+      "Authoring canvas coverage"
     ],
     "glimmer-catalog": [
       "android-catalogs"

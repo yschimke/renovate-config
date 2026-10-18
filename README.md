@@ -139,7 +139,9 @@ itself.
 
 Keep the Java major selected by each repository and continue taking maintenance
 updates within it. The shared preset suppresses **major** proposals for
-`java-jdk` and `java-jre` from Renovate's `java-version` datasource. It does not
+`java-jdk` and `java-jre` from Renovate's `java-version` datasource, including
+the `java` alias and platform-qualified names such as
+`java-jdk?os=linux&architecture=x64`. It does not
 freeze a patch release, downgrade projects already on a newer Java, or restrict
 ordinary Java libraries and `actions/setup-java` action releases. Docker images
 need a repository-local rule because their tags and runtime roles differ.

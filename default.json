@@ -245,7 +245,7 @@
     {
       "description": "Keep each Java JDK/JRE on its deliberately selected major; maintenance updates remain enabled. A new LTS is not evidence that Gradle plugins, embedded renderers, agents or the published bytecode/runtime contract support it. Server #1738 proposed moving only its Java 21 visual-harness lane to 25 while its distribution still supports 17 and its image runs 21. Suppress Java major proposals until a repository explicitly opts in after checking the wrapper/plugin support, runtime/bytecode floors, distribution and render tests. This does not hold ordinary Java libraries, setup-java action releases or Docker tags; image/floor constraints belong in the consuming repository. See README.md#java-runtime-policy.",
       "matchDatasources": ["java-version"],
-      "matchPackageNames": ["java-jdk", "java-jre"],
+      "matchPackageNames": ["/^java(-jdk|-jre)?(\\?|$)/"],
       "matchUpdateTypes": ["major"],
       "enabled": false
     }

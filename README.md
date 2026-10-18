@@ -135,6 +135,45 @@ repo-local rule that sets `allowedVersions` across the whole `gradle` manager
 replaces these entirely for those dependencies and has to repeat the suffixes
 itself.
 
+## Java runtime policy
+
+Keep the Java major selected by each repository and continue taking maintenance
+updates within it. The shared preset suppresses **major** proposals for
+`java-jdk` and `java-jre` from Renovate's `java-version` datasource. It does not
+freeze a patch release, downgrade projects already on a newer Java, or restrict
+ordinary Java libraries and `actions/setup-java` action releases. Docker images
+need a repository-local rule because their tags and runtime roles differ.
+
+A new LTS alone does not establish compatibility with Gradle plugins, embedded
+renderers, instrumentation agents or the runtime contract of published artifacts.
+For example, [compose-preview-server#1738](https://github.com/yschimke/compose-preview-server/pull/1738)
+passed its CI after replacing the visual harness's Java 21 with 25, but left
+the distribution's Java 17 floor and Temurin 21 image unchanged. That is evidence
+for that lane, rather than a migration of all three contracts. Conversely,
+[ClassGraph 6](https://github.com/yschimke/compose-preview-server/pull/1741)
+actually needs Java 25 and breaks the server's Java 17 dependency floor.
+
+To adopt a new major, document the intended lane and runtime floor, check the
+[Gradle compatibility matrix](https://docs.gradle.org/current/userguide/compatibility.html)
+and plugin/renderer requirements, then verify compilation, tests, packaged startup
+and representative renders on the selected JVM. Preserve coverage of any lower
+runtime still supported. Update relevant container/toolchain declarations in the
+same migration, or explain why they intentionally differ. Gradle supporting a JVM
+does not prove every plugin or embedded component supports it.
+
+A repository can then change its selected Java major in a reviewed PR, or append
+a narrow local `packageRules` override with the same datasource/package match,
+`matchUpdateTypes: ["major"]`, `enabled: true` and `automerge: false`. Remove or
+adjust any local `allowedVersions` ceiling as part of that reviewed migration.
+This is a proposal policy, not an assertion that every currently selected Java
+line remains supported forever; review runtime support periodically.
+
+Run the dependency-free policy regression tests with:
+
+```sh
+node --test tests/java-policy.test.mjs
+```
+
 ## Automerge
 
 Patch and minor updates **auto-land once every CI check on the branch is

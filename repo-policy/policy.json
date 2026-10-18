@@ -47,6 +47,9 @@
     "compose-preview-server": [
       "gradle"
     ],
+    "preview-coo-ee": [
+      "verify"
+    ],
     "compose-preview-mcp": [
       "gradle"
     ],

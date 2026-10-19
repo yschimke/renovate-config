@@ -55,6 +55,13 @@ artifacts are GitHub release assets — the `compose-preview-mcp` distribution, 
 nothing a catalog pins can belong to it. It extends this preset as a consumer, and
 `repo-policy/policy.json` requires its `gradle` check.
 
+**compose-preview-client** ([yschimke/compose-preview-client](https://github.com/yschimke/compose-preview-client))
+is the same: the mobile and Wear device-preview apps ship to Google Play, not Maven, so there is
+no train for it here. It extends this preset as a consumer, and `repo-policy/policy.json` requires
+its `ktfmt + core tests` and `Assemble mobile + wear` checks. Its own `renovate.json` keeps the
+AndroidX Remote Compose player (`androidx.compose.remote`, an alpha line the apps' playback depends
+on) out of the BOM-aligned `androidx-compose` group and off automerge.
+
 **Convenience groups** (independent, but low-risk to batch):
 
 - **kotlinx** — coroutines / serialization / io / datetime.

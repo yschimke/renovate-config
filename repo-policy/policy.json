@@ -53,6 +53,10 @@
     "compose-preview-mcp": [
       "gradle"
     ],
+    "compose-preview-client": [
+      "ktfmt + core tests",
+      "Assemble mobile + wear"
+    ],
     "compose-preview-vscode": [
       "Build and test"
     ],

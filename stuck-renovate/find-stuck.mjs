@@ -19,7 +19,7 @@ export const DEFAULT_STALE_HOURS = 6;
 const PRESET = 'yschimke/renovate-config';
 const CONFIG_FILES = [
   'renovate.json', 'renovate.json5', '.github/renovate.json', '.github/renovate.json5',
-  '.gitlab/renovate.json', '.renovaterc', '.renovaterc.json', '.renovaterc.json5',
+  '.gitlab/renovate.json', '.gitlab/renovate.json5', '.renovaterc', '.renovaterc.json', '.renovaterc.json5',
 ];
 const FAILED = new Set(['failure', 'timed_out', 'cancelled', 'action_required', 'startup_failure', 'stale']);
 
@@ -49,23 +49,30 @@ export function classify(pr, checkRuns, requiredChecks, now = new Date(), staleH
   const automergeIntended = /\*\*Automerge\*\*: Enabled/.test(body);
   const checks = latestChecks(checkRuns);
   const failed = [...checks.values()].filter(c => c.status === 'completed' && FAILED.has(c.conclusion)).map(c => c.name);
-  const pending = [...checks.values()].filter(c => c.status !== 'completed').map(c => c.name);
+  const pending = [...checks.values()].filter(c => c.status !== 'completed');
   const required = new Set(requiredChecks);
   const requiredFailed = failed.filter(n => required.has(n));
-  const requiredPending = pending.filter(n => required.has(n));
   const requiredMissing = requiredChecks.filter(n => !checks.has(n));
   // Without required checks Renovate merges itself, and waits for every check.
   const blockingFailed = required.size ? requiredFailed : failed;
+  const blockingPending = required.size ? pending.filter(c => required.has(c.name)) : pending;
+  // A run started recently (a rebase, a re-run) is CI doing its job, not a stuck PR.
+  const isStale = c => (now - new Date(c.started_at ?? now)) / 36e5 >= staleHours;
+  if (blockingPending.some(c => !isStale(c)) && !blockingFailed.length && !requiredMissing.length &&
+      pr.mergeable_state !== 'dirty') {
+    return null;
+  }
 
   const reasons = [];
   if (pr.mergeable_state === 'dirty') reasons.push('conflict');
   if (/Edited\/Blocked/.test(body)) reasons.push('renovate-blocked');
   if (blockingFailed.length) reasons.push('check-failed');
   if (requiredMissing.length) reasons.push('check-missing');
-  if (requiredPending.length || (!required.size && pending.length)) reasons.push('check-pending');
+  if (blockingPending.some(isStale)) reasons.push('check-pending');
   if (!reasons.length) {
     if (!automergeIntended) reasons.push('manual-by-config');
-    else if (!pr.auto_merge) reasons.push('automerge-not-armed');
+    // Native auto-merge only where required checks gate it; elsewhere Renovate merges itself.
+    else if (!pr.auto_merge && required.size) reasons.push('automerge-not-armed');
     else reasons.push('green-but-open');
   }
 
@@ -82,7 +89,7 @@ export function classify(pr, checkRuns, requiredChecks, now = new Date(), staleH
     reasons,
     failed: blockingFailed,
     advisoryFailed: failed.filter(n => !blockingFailed.includes(n)),
-    pending,
+    pending: pending.map(c => c.name),
     missing: requiredMissing,
   };
 }

@@ -54,6 +54,13 @@ test('a required check that never reported is flagged', () => {
   assert.deepEqual(result.missing, ['Conventional Commit title']);
 });
 
+test('a pending check counts only once it has itself been running for hours', () => {
+  const fresh = run('gradle', null, '2026-10-22T19:30:00Z');
+  const stale = run('gradle', null, '2026-10-22T11:00:00Z');
+  assert.equal(classify(pr(), [fresh], ['gradle'], now), null);
+  assert.deepEqual(classify(pr(), [stale], ['gradle'], now).reasons, ['check-pending']);
+});
+
 test('conflicts and edited branches are reported', () => {
   const result = classify(pr({ mergeable_state: 'dirty', body: `${AUTOMERGE}\n### ⚠ Edited/Blocked Notification` }), [], [], now);
   assert.deepEqual(result.reasons, ['conflict', 'renovate-blocked']);
@@ -64,6 +71,8 @@ test('green PRs split by why they did not merge', () => {
   assert.deepEqual(classify(pr({ auto_merge: null }), green, ['gradle'], now).reasons, ['automerge-not-armed']);
   assert.deepEqual(classify(pr(), green, ['gradle'], now).reasons, ['green-but-open']);
   assert.deepEqual(classify(pr({ body: MANUAL, auto_merge: null }), green, ['gradle'], now).reasons, ['manual-by-config']);
+  // No required checks: Renovate merges itself, so native auto-merge is never expected.
+  assert.deepEqual(classify(pr({ auto_merge: null }), green, [], now).reasons, ['green-but-open']);
 });
 
 test('the report separates PRs a human is meant to merge', () => {

@@ -40,8 +40,8 @@ tool says. Read the repo's `AGENTS.md`/`CLAUDE.md` before changing anything in i
 
 | Reason | Meaning | Action |
 | --- | --- | --- |
-| `automerge-not-armed` | green, Renovate says automerge, GitHub auto-merge is off | `enable_pr_auto_merge` (squash). |
-| `green-but-open` | green and armed but not merged | Check the PR's mergeability and the ruleset (a required check from a different app, an approval rule, an unresolved thread). Fix the cause if it is in the PR; otherwise escalate — the ruleset is `repo-policy/`'s to change. |
+| `automerge-not-armed` | green, Renovate says automerge, the base has required checks, GitHub auto-merge is off | `enable_pr_auto_merge` (squash). Only reported where required checks gate the merge. |
+| `green-but-open` | green but not merged: armed with required checks, or (no required checks) Renovate has not merged it itself | With required checks: check mergeability and the ruleset (a required check from a different app, an approval rule, an unresolved thread); fix the cause if it is in the PR, otherwise escalate — the ruleset is `repo-policy/`'s to change. Without required checks: **never** enable GitHub auto-merge (it would not wait for CI); tick the rebase box so Renovate re-evaluates, and check the Dependency Dashboard / Renovate log for why it held back. |
 | `conflict` | Renovate rebases on conflict (`rebaseWhen: conflicted`) but has not | Tick the rebase box: edit the PR body replacing `- [ ] <!-- rebase-check -->` with `- [x] <!-- rebase-check -->`. If the body has `Edited/Blocked`, see below. |
 | `renovate-blocked` | someone pushed to the branch, so Renovate stops updating it | If those commits are a fix still needed, finish the job (section 3). If the branch is just stale, tick the rebase box — Renovate then discards the edits and recreates it. |
 | `check-missing` | a required check never reported | The workflow never ran for this head (a `paths:` filter, a missing trigger, a renamed job). Tick the rebase box once. If it still never reports, it is a repository bug: fix the workflow in that repository (separate PR) or escalate if the fix is the policy's. |
@@ -76,8 +76,8 @@ version. **Fix and land it**:
    and push to the Renovate branch. **No agent `Co-authored-by` trailer and no agent author identity**:
    these repositories reject agent attribution (`Reject agent attribution` is a required check).
    A `Claude-Session:` link trailer is fine.
-5. Make sure GitHub auto-merge is still armed (`enable_pr_auto_merge` if not) — unless the PR is
-   `manual-by-config`.
+5. Make sure GitHub auto-merge is still armed (`enable_pr_auto_merge` if not) — only in a
+   repository whose base branch has required checks, and never on a `manual-by-config` PR.
 6. `subscribe_pr_activity` on the PR, so a new CI failure wakes this session to finish it.
 
 Renovate stops rebasing a branch someone else committed to. That is fine for a PR about to merge;

@@ -65,7 +65,9 @@ export function classify(pr, checkRuns, requiredChecks, now = new Date(), staleH
 
   const reasons = [];
   if (pr.mergeable_state === 'dirty') reasons.push('conflict');
-  if (/Edited\/Blocked/.test(body)) reasons.push('renovate-blocked');
+  // Renovate posts this as a comment once anyone else commits to its branch, and then never
+  // automerges the PR itself.
+  if (pr.renovateEdited || /Edited\/Blocked/.test(body)) reasons.push('renovate-blocked');
   if (blockingFailed.length) reasons.push('check-failed');
   if (requiredMissing.length) reasons.push('check-missing');
   if (blockingPending.some(isStale)) reasons.push('check-pending');
@@ -188,6 +190,8 @@ async function main(argv) {
     if (!usesPreset.get(repo)) continue;
 
     const pr = await api(`/repos/${repo}/pulls/${item.number}`);
+    const comments = await api(`/repos/${repo}/issues/${item.number}/comments?per_page=100`);
+    pr.renovateEdited = comments.some(c => c.user.login === 'renovate[bot]' && /Edited\/Blocked/.test(c.body));
     const key = `${repo}@${pr.base.ref}`;
     if (!required.has(key)) {
       const rules = await api(`/repos/${repo}/rules/branches/${encodeURIComponent(pr.base.ref)}`, { allow404: true }) ?? [];

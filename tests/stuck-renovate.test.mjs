@@ -66,6 +66,11 @@ test('conflicts and edited branches are reported', () => {
   assert.deepEqual(result.reasons, ['conflict', 'renovate-blocked']);
 });
 
+test('a branch Renovate reported as edited is blocked even when green', () => {
+  const result = classify(pr({ renovateEdited: true, auto_merge: null }), [run('gradle', 'success')], ['gradle'], now);
+  assert.deepEqual(result.reasons, ['renovate-blocked']);
+});
+
 test('green PRs split by why they did not merge', () => {
   const green = [run('gradle', 'success')];
   assert.deepEqual(classify(pr({ auto_merge: null }), green, ['gradle'], now).reasons, ['automerge-not-armed']);

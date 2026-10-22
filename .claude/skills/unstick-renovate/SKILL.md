@@ -43,7 +43,7 @@ tool says. Read the repo's `AGENTS.md`/`CLAUDE.md` before changing anything in i
 | `automerge-not-armed` | green, Renovate says automerge, the base has required checks, GitHub auto-merge is off | `enable_pr_auto_merge` (squash). Only reported where required checks gate the merge. |
 | `green-but-open` | green but not merged: armed with required checks, or (no required checks) Renovate has not merged it itself | With required checks: check mergeability and the ruleset (a required check from a different app, an approval rule, an unresolved thread); fix the cause if it is in the PR, otherwise escalate — the ruleset is `repo-policy/`'s to change. Without required checks: **never** enable GitHub auto-merge (it would not wait for CI); tick the rebase box so Renovate re-evaluates, and check the Dependency Dashboard / Renovate log for why it held back. |
 | `conflict` | Renovate rebases on conflict (`rebaseWhen: conflicted`) but has not | Tick the rebase box: edit the PR body replacing `- [ ] <!-- rebase-check -->` with `- [x] <!-- rebase-check -->`. If the body has `Edited/Blocked`, see below. |
-| `renovate-blocked` | someone pushed to the branch, so Renovate stops updating it | If those commits are a fix still needed, finish the job (section 3). If the branch is just stale, tick the rebase box — Renovate then discards the edits and recreates it. |
+| `renovate-blocked` | someone pushed to the branch (Renovate says so in an `Edited/Blocked Notification` comment), so Renovate neither rebases **nor automerges** it | If those commits are the fix: once every check is green and the PR is mergeable, land it yourself (section 3, step 5) — Renovate never will. If it is red, finish the fix first. If it conflicts with the base, see section 3's note on conflicts. If the edits are stale or wrong, tick the rebase box — Renovate then discards them and recreates the branch. |
 | `check-missing` | a required check never reported | The workflow never ran for this head (a `paths:` filter, a missing trigger, a renamed job). Tick the rebase box once. If it still never reports, it is a repository bug: fix the workflow in that repository (separate PR) or escalate if the fix is the policy's. |
 | `check-pending` | a required check has been queued/running for hours | Cancelled runner, stuck queue. Re-run the job once (`actions_run_trigger` `rerun_failed_jobs`, or `rerun_workflow_run`). |
 | `check-failed` | a required (or, with no required checks, any) check is red | Section 3. |
@@ -74,10 +74,21 @@ version. **Fix and land it**:
 3. Make the minimal fix, run the failing check plus the repo's fast checks (format, lint, unit tests).
 4. Commit with a Conventional Commit message (`fix(deps): adapt to <lib> <version> <what changed>`)
    and push to the Renovate branch. **No agent `Co-authored-by` trailer and no agent author identity**:
-   these repositories reject agent attribution (`Reject agent attribution` is a required check).
-   A `Claude-Session:` link trailer is fine.
-5. Make sure GitHub auto-merge is still armed (`enable_pr_auto_merge` if not) — only in a
-   repository whose base branch has required checks, and never on a `manual-by-config` PR.
+   these repositories reject agent attribution (`Reject agent attribution` is a required check),
+   and a session's local git identity is usually an agent one. Push the changed files through
+   the GitHub API (`push_files` onto the Renovate branch), which commits as the account owner;
+   do not change the local git identity to impersonate anyone. A `Claude-Session:` link trailer
+   is fine.
+5. **Land it yourself.** Renovate does not automerge a branch someone else committed to. Where
+   the base branch's required checks include a real build (`repo-policy/policy.json`), arm GitHub
+   auto-merge (`enable_pr_auto_merge`, squash). Elsewhere, wait for every check to go green and
+   squash-merge (`merge_pull_request`). Never on a `manual-by-config` PR.
+
+A Renovate branch that conflicts with its base after someone edited it cannot be fixed by the
+rebase box without losing the fix, and the update-branch API refuses conflicts. Resolving it needs
+a local merge commit, which the identity rule above rules out from a session: escalate it with the
+conflicting files named, or, if the fix is small, tick the rebase box and re-apply the fix on the
+fresh branch through the API.
 6. `subscribe_pr_activity` on the PR, so a new CI failure wakes this session to finish it.
 
 Renovate stops rebasing a branch someone else committed to. That is fine for a PR about to merge;

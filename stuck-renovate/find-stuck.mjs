@@ -199,9 +199,10 @@ async function main(argv) {
       const result = await inspect(repo, item.number);
       if (result) stuck.push(result);
     } catch (e) {
-      // The search lists PRs in repositories the token cannot read (a private repository and a
-      // workflow's default token); one of those must not cost the report for all the others.
-      if (e.status !== 403 && e.status !== 404) throw e;
+      // The search lists PRs the token cannot read (GitHub answers 404 for a repository it hides);
+      // one of those must not cost the report for all the others. A 403 is left to fail the run:
+      // it is also how GitHub reports a rate limit, and a partial scan would close the issue.
+      if (e.status !== 404) throw e;
       unreadable.push(`${repo}#${item.number}`);
     }
   }

@@ -90,4 +90,8 @@ test('the report separates PRs a human is meant to merge', () => {
   assert.match(md, /### Automerge off by config — waiting on a human \(1\)/);
   assert.match(md, /failed: gradle/);
   assert.match(renderMarkdown([], { generatedAt: '', staleHours: 6, scanned: 0 }), /Nothing is stuck\./);
+  assert.match(
+    renderMarkdown([], { generatedAt: '', staleHours: 6, scanned: 0, unreadable: ['yschimke/x#1'] }),
+    /not checked: yschimke\/x#1\./,
+  );
 });

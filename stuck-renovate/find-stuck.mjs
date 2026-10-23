@@ -96,13 +96,16 @@ export function classify(pr, checkRuns, requiredChecks, now = new Date(), staleH
   };
 }
 
-export function renderMarkdown(stuck, { generatedAt, staleHours, scanned }) {
+export function renderMarkdown(stuck, { generatedAt, staleHours, scanned, unreadable = [] }) {
   const lines = [
     '<!-- stuck-renovate-report -->',
     `Renovate PRs open longer than ${staleHours}h in repositories extending \`${PRESET}\`.`,
     `Generated ${generatedAt} from ${scanned} open Renovate PRs by [\`stuck-renovate/\`](../tree/main/stuck-renovate).`,
     '',
   ];
+  if (unreadable.length) {
+    lines.push(`Not readable with the workflow's token, so not checked: ${unreadable.join(', ')}.`, '');
+  }
   if (!stuck.length) {
     lines.push('Nothing is stuck.');
     return lines.join('\n') + '\n';
@@ -148,7 +151,9 @@ async function main(argv) {
       },
     });
     if (allow404 && res.status === 404) return null;
-    if (!res.ok) throw new Error(`${res.status} ${path}: ${await res.text()}`);
+    if (!res.ok) {
+      throw Object.assign(new Error(`${res.status} ${path}: ${await res.text()}`), { status: res.status });
+    }
     return res.json();
   };
 
@@ -174,6 +179,7 @@ async function main(argv) {
   const usesPreset = new Map();
   const required = new Map();
   const stuck = [];
+  const unreadable = [];
   for (const item of prs) {
     const repo = item.repository_url.replace('https://api.github.com/repos/', '');
     if (!usesPreset.has(repo)) {
@@ -189,8 +195,20 @@ async function main(argv) {
     }
     if (!usesPreset.get(repo)) continue;
 
-    const pr = await api(`/repos/${repo}/pulls/${item.number}`);
-    const comments = await api(`/repos/${repo}/issues/${item.number}/comments?per_page=100`);
+    try {
+      const result = await inspect(repo, item.number);
+      if (result) stuck.push(result);
+    } catch (e) {
+      // The search lists PRs in repositories the token cannot read (a private repository and a
+      // workflow's default token); one of those must not cost the report for all the others.
+      if (e.status !== 403 && e.status !== 404) throw e;
+      unreadable.push(`${repo}#${item.number}`);
+    }
+  }
+
+  async function inspect(repo, number) {
+    const pr = await api(`/repos/${repo}/pulls/${number}`);
+    const comments = await api(`/repos/${repo}/issues/${number}/comments?per_page=100`);
     pr.renovateEdited = comments.some(c => c.user.login === 'renovate[bot]' && /Edited\/Blocked/.test(c.body));
     const key = `${repo}@${pr.base.ref}`;
     if (!required.has(key)) {
@@ -205,13 +223,12 @@ async function main(argv) {
       runs.push(...res.check_runs);
       if (res.check_runs.length < 100) break;
     }
-    const result = classify(pr, runs, required.get(key), new Date(), staleHours);
-    if (result) stuck.push(result);
+    return classify(pr, runs, required.get(key), new Date(), staleHours);
   }
 
   stuck.sort((a, b) => a.repo.localeCompare(b.repo) || a.number - b.number);
   const scanned = prs.filter(p => usesPreset.get(p.repository_url.replace('https://api.github.com/repos/', ''))).length;
-  const markdown = renderMarkdown(stuck, { generatedAt: new Date().toISOString(), staleHours, scanned });
+  const markdown = renderMarkdown(stuck, { generatedAt: new Date().toISOString(), staleHours, scanned, unreadable });
   if (args.json) writeFileSync(args.json, JSON.stringify(stuck, null, 2) + '\n');
   if (args.markdown) writeFileSync(args.markdown, markdown);
   if (!args.json && !args.markdown) process.stdout.write(markdown);

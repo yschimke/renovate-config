@@ -180,7 +180,7 @@ line remains supported forever; review runtime support periodically.
 Run the dependency-free policy regression tests with:
 
 ```sh
-node --test tests/java-policy.test.mjs
+node --test tests/*.test.mjs
 ```
 
 ## Automerge
@@ -230,6 +230,29 @@ Staying behind the base is safe here because the `Protect Main` ruleset does not
 to be up to date (`strict_required_status_checks_policy: false` in
 [`repo-policy/policy.json`](repo-policy/policy.json)), the same as for every human PR. A branch is
 still rebased when it conflicts, and a single PR can be rebased on demand from its checkbox.
+
+## Stuck Renovate PRs
+
+With the settings above a Renovate PR lands within a few hours, so one still open after that is a
+fault to fix, not a PR to wait on. Two pieces find and clear them:
+
+- **[`stuck-renovate.yml`](.github/workflows/stuck-renovate.yml)**, every 3 hours, runs
+  [`stuck-renovate/find-stuck.mjs`](stuck-renovate/find-stuck.mjs) over every open Renovate PR of
+  the owner whose repository extends this preset, and rewrites the issue labelled
+  `stuck-renovate` with those open for over 6 hours and why: a red required check, a required
+  check that never reported, a conflict Renovate did not rebase, an edited branch, auto-merge not
+  armed. PRs whose automerge is off by config (majors, Compose Multiplatform) are listed apart, as
+  waiting on a person. The issue closes itself when nothing is stuck. It uses the default token,
+  so it sees public repositories only (`preview-coo-ee` is not covered).
+- **A scheduled Claude Code task** reads that issue and follows
+  [`.claude/skills/unstick-renovate`](.claude/skills/unstick-renovate/SKILL.md): nudge what is
+  mechanical (arm auto-merge, tick Renovate's rebase box, re-run a lost job), push a small fix to
+  the Renovate branch and let it automerge, or add a `packageRules` entry skipping the bad version
+  with a `description` saying why and when to remove it. Anything that needs a decision is
+  escalated as a comment on the issue. Each run reports what it did there.
+
+Run the detector locally with `node stuck-renovate/find-stuck.mjs` (`--repos a,b` to skip the
+owner-wide search).
 
 ## Repository settings
 

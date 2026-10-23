@@ -1,0 +1,62 @@
+name: Stuck Renovate PRs
+
+# Every Renovate PR in a repository extending this preset should automerge
+# within a few hours. This lists the ones that did not, in one pinned issue
+# (`stuck-renovate` label), which the scheduled Claude task works through with
+# `.claude/skills/unstick-renovate/`. Read-only across repositories: the default
+# token can only write this repository's issue.
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      stale_hours:
+        description: Hours a Renovate PR may stay open before it counts as stuck
+        default: "6"
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: stuck-renovate
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Find stuck Renovate PRs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          STALE_HOURS: ${{ inputs.stale_hours || '6' }}
+        run: |
+          node stuck-renovate/find-stuck.mjs --owner "${{ github.repository_owner }}" \
+            --stale-hours "$STALE_HOURS" --json stuck.json --markdown stuck.md
+          cat stuck.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Update the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create stuck-renovate --color B60205 \
+            --description "Renovate PRs that did not automerge" 2>/dev/null || true
+          number=$(gh issue list --label stuck-renovate --state all --limit 1 \
+            --json number --jq '.[0].number // empty')
+          count=$(jq length stuck.json)
+          if [ -z "$number" ]; then
+            [ "$count" -eq 0 ] && exit 0
+            gh issue create --title "Stuck Renovate PRs" --label stuck-renovate --body-file stuck.md
+            exit 0
+          fi
+          gh issue edit "$number" --body-file stuck.md
+          state=$(gh issue view "$number" --json state --jq .state)
+          if [ "$count" -eq 0 ] && [ "$state" = OPEN ]; then
+            gh issue close "$number" --reason completed --comment "Nothing is stuck."
+          elif [ "$count" -gt 0 ] && [ "$state" = CLOSED ]; then
+            gh issue reopen "$number"
+          fi

@@ -32,7 +32,12 @@ jobs:
           persist-credentials: false
       - name: Find stuck Renovate PRs
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          # The workflow's own token can list and search other repositories' PRs but not read
+          # their check runs, so every PR came back unreadable and the report said "0 stuck".
+          # STUCK_RENOVATE_TOKEN: a fine-grained PAT, read-only, all repositories of the owner,
+          # with Pull requests + Checks + Contents + Metadata read (or a classic PAT with
+          # public_repo). Falls back to the workflow token, which then fails the run loudly.
+          GITHUB_TOKEN: ${{ secrets.STUCK_RENOVATE_TOKEN || github.token }}
           STALE_HOURS: ${{ inputs.stale_hours || '6' }}
         run: |
           node stuck-renovate/find-stuck.mjs --owner "${{ github.repository_owner }}" \

@@ -108,19 +108,22 @@
       "Assemble debug APK",
       "Unit tests",
       "Validate PR title (conventional commits)",
-      "Scan commits and PR body"
+      "Scan commits and PR body",
+      "Render previews (baseline or PR comment, auto-selected)"
     ],
     "meshcore-mobile": [
       "Assemble (debug)",
       "Unit tests",
       "Validate PR title (conventional commits)",
-      "Scan commits and PR body"
+      "Scan commits and PR body",
+      "Render previews (baseline or PR comment, auto-selected)"
     ],
     "homeassistant-remotecompose": [
       "Assemble (debug)",
       "Unit tests",
       "Validate PR title (conventional commits)",
-      "Scan commits and PR body"
+      "Scan commits and PR body",
+      "Render previews (baseline or PR comment, auto-selected)"
     ],
     "compose-preview-bazel": [
       "Bazel rules validation",

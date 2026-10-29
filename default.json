@@ -248,6 +248,28 @@
       "matchPackageNames": ["/^java(-jdk|-jre)?(\\?|$)/"],
       "matchUpdateTypes": ["major"],
       "enabled": false
+    },
+    {
+      "description": "Look Temurin pins up for Windows x64, the platform Adoptium publishes last. A setup-java `java-version` pin is installed on Linux, macOS and Windows runners, and 21.0.13+9 reached Linux and macOS days before Windows: cadence#383 and meshcore-mobile#594 proposed it while their Windows desktop jobs could only fail with 'No matching version found', and sat open for days. homeassistant-remotecompose carried this rule on its own (#1082); every repository with a Windows job needs it, and one without loses nothing but a few days on a maintenance pin.",
+      "matchDatasources": ["java-version"],
+      "matchPackageNames": ["java-jdk"],
+      "overridePackageName": "java-jdk?os=windows&architecture=x64"
+    },
+    {
+      "description": "ClassGraph 6 requires Java 25 and a new scanning API. Every repository that scans classes with it targets an older floor, and the 6.0 PRs fail their required checks everywhere they were opened (compose-ai-tools#6245, compose-preview-daemon#415, compose-ui-builder#1039, compose-ai-contrib#74; compose-preview-server already held it for the same reason, its #1741). Keep 5.x eligible; a repository that has deliberately raised its JVM floor to 25 and ported its discovery can override this with its own `allowedVersions`.",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": ["io.github.classgraph:classgraph"],
+      "allowedVersions": "(,6.0.0)"
+    },
+    {
+      "description": "Android Gradle Plugin 9.5 breaks preview rendering with the released `ee.schimke.composeai.preview` plugin (2.74.x): the AGP 9.5.0 PRs fail their render / discovery steps in cadence#409, meshcore-mobile#619, homeassistant-remotecompose#1312 and remote-m3-catalog#224, and `missing-renders: warn` would let a broken render reach main once required checks pass. Hold below 9.5 until a compose-ai-tools release that renders under AGP 9.5 ships, then delete this rule so the AGP and plugin bumps land together.",
+      "matchPackageNames": [
+        "com.android.application",
+        "com.android.library",
+        "com.android.kotlin.multiplatform.library",
+        "com.android.tools.build:gradle"
+      ],
+      "allowedVersions": "(,9.5.0)"
     }
   ]
 }

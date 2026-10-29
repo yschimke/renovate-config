@@ -233,7 +233,17 @@ async function main(argv) {
   if (args.json) writeFileSync(args.json, JSON.stringify(stuck, null, 2) + '\n');
   if (args.markdown) writeFileSync(args.markdown, markdown);
   if (!args.json && !args.markdown) process.stdout.write(markdown);
-  console.error(`${stuck.length} stuck of ${scanned} open Renovate PRs in preset repositories`);
+  console.error(`${stuck.length} stuck of ${scanned} open Renovate PRs in preset repositories` +
+    (unreadable.length ? `; ${unreadable.length} not readable with this token` : ''));
+  // A token that can list PRs but not read them (the workflow's own GITHUB_TOKEN cannot read
+  // another repository's check runs) used to make every PR "unreadable" and the report say
+  // nothing was stuck, which closed the tracking issue while 40-odd PRs sat open. A scan that
+  // read nothing is a failed scan, not a clean one.
+  if (scanned > 0 && unreadable.length >= scanned) {
+    console.error('Could not read any of them: give the workflow a token that can read check runs ' +
+      'across the owner\'s repositories (STUCK_RENOVATE_TOKEN).');
+    process.exitCode = 2;
+  }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -209,7 +209,8 @@ set `"platformAutomerge": true` in their own `renovate.json`: GitHub merges the 
 checks pass, instead of on Renovate's next run.
 
 GitHub auto-merge waits **only** for required checks, and those are deliberately the build and
-unit-test jobs. Lint, formatting, render and other jobs still run and still show red on the PR,
+unit-test jobs (plus, in the three app repositories, the preview render job — see
+[repo-policy/README.md](repo-policy/README.md#app-repositories)). Lint, formatting, render and other jobs still run and still show red on the PR,
 but they no longer hold back an automerged Renovate PR. A repository with no required checks
 (`compose-preview-imports`) stays on Renovate-managed automerge, which waits for every check.
 

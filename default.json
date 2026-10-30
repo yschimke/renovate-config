@@ -256,10 +256,10 @@
       "overridePackageName": "java-jdk?os=windows&architecture=x64"
     },
     {
-      "description": "ClassGraph 6 requires Java 25 and a new scanning API. Every repository that scans classes with it targets an older floor, and the 6.0 PRs fail their required checks everywhere they were opened (compose-ai-tools#6245, compose-preview-daemon#415, compose-ui-builder#1039, compose-ai-contrib#74; compose-preview-server already held it for the same reason, its #1741). Keep 5.x eligible; a repository that has deliberately raised its JVM floor to 25 and ported its discovery can override this with its own `allowedVersions`. The regex carries the -SNAPSHOT filter from the first rule as well: both set `allowedVersions` and the last match wins, so a plain range here would hand ClassGraph's snapshots back.",
+      "description": "ClassGraph 6 requires Java 25 and a new scanning API. Every repository that scans classes with it targets an older floor, and the 6.0 PRs fail their required checks everywhere they were opened (compose-ai-tools#6245, compose-preview-daemon#415, compose-ui-builder#1039, compose-ai-contrib#74; compose-preview-server already held it for the same reason, its #1741). Keep 5.x eligible; a repository that has deliberately raised its JVM floor to 25 and ported its discovery can override this with its own `allowedVersions`. The regex carries the -SNAPSHOT filter from the first rule as well: both set `allowedVersions` and the last match wins, so a plain range here would hand ClassGraph's snapshots back. It names plain `x.y.z` releases rather than excluding `-SNAPSHOT` with a lookahead, because Renovate compiles `allowedVersions` regexes with RE2, which has no lookahead: the earlier `(?!.*-SNAPSHOT$)` form failed config validation, so the cap never applied. A repository whose own gradle-wide `allowedVersions` rule comes after this preset overrides it and has to repeat the cap.",
       "matchManagers": ["gradle"],
       "matchPackageNames": ["io.github.classgraph:classgraph"],
-      "allowedVersions": "/^(?!.*-SNAPSHOT$)[0-5]\\./"
+      "allowedVersions": "/^[0-5]\\.[0-9]+\\.[0-9]+$/"
     },
     {
       "description": "Android Gradle Plugin 9.5 breaks preview rendering with the released `ee.schimke.composeai.preview` plugin (2.74.x): the AGP 9.5.0 PRs fail their render / discovery steps in cadence#409, meshcore-mobile#619, homeassistant-remotecompose#1312 and remote-m3-catalog#224, and `missing-renders: warn` would let a broken render reach main once required checks pass. Hold below 9.5 until a compose-ai-tools release that renders under AGP 9.5 ships, then delete this rule so the AGP and plugin bumps land together. Written as a regex that also excludes -SNAPSHOT, for the same last-match-wins reason as the classgraph rule.",
@@ -269,7 +269,7 @@
         "com.android.kotlin.multiplatform.library",
         "com.android.tools.build:gradle"
       ],
-      "allowedVersions": "/^(?!.*-SNAPSHOT$)([0-8]\\.|9\\.[0-4]\\.)/"
+      "allowedVersions": "/^([0-8]\\.[0-9]+|9\\.[0-4])\\.[0-9]+(-(alpha|beta|rc)[0-9]+)?$/"
     }
   ]
 }

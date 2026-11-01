@@ -11,8 +11,18 @@ per-repository `scripts/setup-repo-protection.sh` copies the catalog repositorie
 ```
 
 It needs `gh` logged in as the owner (or a fine-grained PAT with **Administration: read/write**).
-No workflow can run it: a default `GITHUB_TOKEN` cannot administer other repositories, and the
-check-only mode is what to re-run after anyone changes a setting in the GitHub UI.
+A default `GITHUB_TOKEN` cannot administer other repositories.
+
+**It runs on its own.** [`repo-policy.yml`](../.github/workflows/repo-policy.yml) applies the policy
+daily, on every push to `main` that changes it, and on demand (`workflow_dispatch`, with a
+`check`/`apply` mode and an optional repository list). A pull request that changes the policy runs
+it in check mode, so the run summary shows what merging would change in each repository. A setting
+changed by hand in the GitHub UI is put back within a day. It authenticates with the repository
+secret `REPO_POLICY_TOKEN`: a fine-grained PAT for the owner's repositories with
+**Administration: read/write**, **Contents: read** and **Metadata: read**. Without it the workflow
+fails at once and says so. Before this, nothing ran the script, and compose-preview-client sat with
+"Allow GitHub Actions to create and approve pull requests" off, and its release-please failed on
+every merge to `main`.
 
 ## What every repository gets
 

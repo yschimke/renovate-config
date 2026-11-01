@@ -1,0 +1,87 @@
+name: Repo policy
+
+# Keeps every repository in repo-policy/policy.json on the policy: merge settings, Actions workflow
+# permissions, the `Protect Main` ruleset and the long-lived-branch rulesets. Until this ran on a
+# schedule, the policy was applied only when someone remembered to run the script, so repositories
+# drifted unnoticed: compose-preview-client had "Allow GitHub Actions to create and approve pull
+# requests" off, and its release-please failed on every merge to main.
+#
+# - On a schedule, on a push to main that changes the policy, and on demand: apply it.
+# - On a pull request that changes the policy: check only, so the run summary shows what merging
+#   the change would do to each repository.
+
+on:
+  schedule:
+    - cron: "43 5 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "repo-policy/**"
+      - ".github/workflows/repo-policy.yml"
+  pull_request:
+    paths:
+      - "repo-policy/**"
+      - ".github/workflows/repo-policy.yml"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "apply writes the policy; check only reports drift"
+        type: choice
+        options: [apply, check]
+        default: apply
+      repos:
+        description: "Space-separated repositories to limit the run to (default: all in policy.json)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repo-policy
+  cancel-in-progress: false
+
+jobs:
+  converge:
+    runs-on: ubuntu-latest
+    # A fork's pull request gets no secrets, so it could only fail.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require the admin token
+        env:
+          REPO_POLICY_TOKEN: ${{ secrets.REPO_POLICY_TOKEN }}
+        run: |
+          if [ -z "$REPO_POLICY_TOKEN" ]; then
+            echo "::error::REPO_POLICY_TOKEN is not set. The policy edits other repositories' settings and rulesets, which the workflow's own GITHUB_TOKEN cannot do. Create a fine-grained PAT for the owner's repositories with Administration: read and write, Contents: read and Metadata: read, and save it as the repository secret REPO_POLICY_TOKEN."
+            exit 1
+          fi
+      - name: Converge
+        env:
+          GH_TOKEN: ${{ secrets.REPO_POLICY_TOKEN }}
+          MODE: ${{ github.event_name == 'pull_request' && 'check' || inputs.mode || 'apply' }}
+          REPOS: ${{ inputs.repos || '' }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -o pipefail
+          args=()
+          [ "$MODE" = apply ] && args+=(--apply)
+          # shellcheck disable=SC2206 # space-separated repository names, deliberately split
+          [ -n "$REPOS" ] && args+=($REPOS)
+          status=0
+          ./repo-policy/apply-repo-policy.sh "${args[@]}" 2>&1 | tee policy.log || status=$?
+          {
+            echo "## Repo policy ($MODE)"
+            echo
+            echo '```'
+            cat policy.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          # In check mode the script exits 1 on drift (2 or more is a real error). A pull request
+          # that changes the policy is expected to show drift, so it only reports it.
+          if [ "$EVENT" = pull_request ] && [ "$status" -eq 1 ]; then
+            exit 0
+          fi
+          exit "$status"

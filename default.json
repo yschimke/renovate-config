@@ -11,7 +11,7 @@
   "prConcurrentLimit": 5,
   "prHourlyLimit": 0,
   "rangeStrategy": "pin",
-  "platformAutomerge": false,
+  "platformAutomerge": true,
   "automergeSchedule": ["at any time"],
   "rebaseWhen": "conflicted",
   "packageRules": [
@@ -26,7 +26,7 @@
       "allowedVersions": "!/(-compat|-SNAPSHOT)$/"
     },
     {
-      "description": "Auto-land patch & minor updates once every CI check on the branch is green. platformAutomerge is false, so Renovate waits for ALL checks (not just branch-protection-required ones) before merging — it cannot merge ahead of CI. A grouped PR only automerges if every update in it qualifies, so any group that happens to contain a major stays manual. A repository whose `Protect Main` ruleset requires real checks (every repository in repo-policy/policy.json except compose-preview-imports) sets platformAutomerge:true in its own renovate.json to merge the moment those checks pass; it stays false here because some repositories extending this preset have no required checks, and native auto-merge there would not wait for CI.",
+      "description": "Auto-land patch & minor updates once the branch is green. platformAutomerge is true, so Renovate arms GitHub auto-merge and GitHub merges the moment the base branch's REQUIRED checks pass (the `Protect Main` ruleset in repo-policy/policy.json: build and unit-test jobs plus the title and attribution gates). Lint, render and other advisory jobs still run but do not hold the merge. A repository whose base branch requires no real check must opt out with platformAutomerge:false in its own renovate.json, which puts it back on Renovate-managed automerge (waits for every check); compose-preview-imports is the one in repo-policy. A grouped PR only automerges if every update in it qualifies, so any group that happens to contain a major stays manual.",
       "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
       "automerge": true
     },

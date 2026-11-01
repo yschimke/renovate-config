@@ -134,6 +134,9 @@
     "compose-ai-contrib": [
       "Reject AI agent branch names",
       "Scan commits and PR body"
+    ],
+    "rc-players": [
+      "JVM + Android players"
     ]
   },
   "retired_rulesets": {

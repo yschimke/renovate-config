@@ -189,33 +189,35 @@ Patch and minor updates **auto-land once every CI check on the branch is
 green**. Major updates never automerge — they get a 14-day soak and a manual
 click.
 
-The preset uses `platformAutomerge: false`, so **Renovate itself waits for all
-checks to pass** and then merges — it can't merge ahead of CI, and it honours
-*every* workflow, not just the ones marked required. The preset sets no
-`schedule`, so updates are proposed on any Renovate run (≈hourly on the hosted
-app) as soon as they are published, and `automergeSchedule: ["at any time"]`
-lets a newly-green PR merge on the next run. Renovate's own run cadence is the
-only delay; any soak comes from `minimumReleaseAge` (14 days for majors here,
-plus whatever a repository sets locally), not from a weekly window. No branch
-protection is required for this to be safe.
+The preset sets `platformAutomerge: true`: Renovate arms **GitHub-native auto-merge** on each
+qualifying PR, and GitHub merges it the moment the base branch's **required** checks pass, rather
+than on Renovate's next run. The preset sets no `schedule`, so updates are proposed on any Renovate
+run (≈hourly on the hosted app) as soon as they are published, and `automergeSchedule: ["at any
+time"]` lets the merge be armed straight away. Any soak comes from `minimumReleaseAge` (14 days for
+majors here, plus whatever a repository sets locally), not from a weekly window.
 
 A grouped PR only automerges if **every** update in it qualifies, so a group
 that happens to include a major bump stays manual until the major is handled.
 
-### GitHub-native merge in the repositories under `repo-policy/`
+### Native auto-merge needs real required checks
 
-The repositories in [`repo-policy/policy.json`](repo-policy/policy.json) that have required checks
-set `"platformAutomerge": true` in their own `renovate.json`: GitHub merges the moment the required
-checks pass, instead of on Renovate's next run.
+GitHub auto-merge waits **only** for required checks. In the repositories under
+[`repo-policy/policy.json`](repo-policy/policy.json) those are deliberately the build and unit-test
+jobs (plus, in the three app repositories, the preview render job — see
+[repo-policy/README.md](repo-policy/README.md#app-repositories)) next to the common title and
+attribution gates. Lint, formatting, render and other jobs still run and still show red on the PR,
+but they do not hold back an automerged Renovate PR.
 
-GitHub auto-merge waits **only** for required checks, and those are deliberately the build and
-unit-test jobs (plus, in the three app repositories, the preview render job — see
-[repo-policy/README.md](repo-policy/README.md#app-repositories)). Lint, formatting, render and other jobs still run and still show red on the PR,
-but they no longer hold back an automerged Renovate PR. A repository with no required checks
-(`compose-preview-imports`) stays on Renovate-managed automerge, which waits for every check.
+**A repository that extends this preset without a build among its required checks must opt out**
+with `"platformAutomerge": false` in its own `renovate.json`; otherwise native auto-merge lands a
+bump as soon as the title and attribution gates pass, without waiting for its build. Opting out puts
+it back on Renovate-managed automerge, which waits for *every* check on the branch.
+`compose-preview-imports` (no required checks in `policy.json`) is the one such repository under
+`repo-policy/`. Before a new repository extends the preset, either add it to `policy.json` with its
+build jobs and apply the ruleset, or give it the opt-out.
 
-The preset keeps `platformAutomerge: false` because other repositories extend it without any
-required checks, and native auto-merge there would merge without waiting for CI.
+Until 2026-11 the default was the other way round (`false` here, `true` set locally in every
+repository with required checks); those local `true`s are now redundant and can be dropped.
 
 ### Rebasing only on conflict
 

@@ -197,3 +197,15 @@ iOS jobs run but do not block merging.
 ```sh
 ./apply-repo-policy.sh --apply cadence meshcore-mobile homeassistant-remotecompose
 ```
+
+## livery
+
+[yschimke/livery](https://github.com/yschimke/livery) follows the aggregate-gate pattern from the
+start: its only required build check is `gradle`, the last job of `ci.yml`, which `needs:` every
+job it gates and fails unless each succeeded. It carries `pr-title.yml` and
+`no-agent-attribution.yml` under the common check names, and `renovate.json` extends this preset.
+
+```sh
+./apply-repo-policy.sh livery            # drift
+./apply-repo-policy.sh --apply livery
+```

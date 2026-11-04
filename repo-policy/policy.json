@@ -137,6 +137,9 @@
     ],
     "rc-players": [
       "JVM + Android players"
+    ],
+    "livery": [
+      "gradle"
     ]
   },
   "retired_rulesets": {

@@ -77,6 +77,10 @@
       "Build + discover previews",
       "Unit tests"
     ],
+    "compose-ui-samples": [
+      "Build + discover previews",
+      "Scripts + generated files"
+    ],
     "wear-m3-catalog": [
       "Build + discover previews",
       "Unit tests"

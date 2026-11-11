@@ -34,10 +34,10 @@ everything else stays small so a single risky bump can't block the safe ones.
 - **androidx-room** — Room + SQLite (+ the Room plugin), which are KSP-coupled.
 - **grpc** — gRPC + protobuf runtime / codegen.
 - **compose-ai-tools** — the preview CLI, the `ee.schimke.composeai.preview`
-  Gradle plugin, the annotation / connector / runtime artifacts and the
-  `yschimke/compose-ai-tools` action refs. One release ships all of them, and a
-  skew between a pinned action ref and the Gradle coords breaks preview
-  discovery.
+  Gradle plugin, `compose-ai-tools-bom`, its discovery / bundle / runtime
+  artifacts and the `yschimke/compose-ai-tools` action refs. One release ships
+  all of them, and a skew between a pinned action ref and the Gradle coords
+  breaks preview discovery.
 - **compose-preview-daemon** — the renderers, data extractors, render daemon and
   `compose-preview-daemon-bom`.
 - **compose-preview-contracts** — the published wire contracts and
@@ -46,7 +46,11 @@ everything else stays small so a single risky bump can't block the safe ones.
   (historic coordinates; the server no longer publishes to Maven Central).
 - **compose-ui-builder** — every `compose-preview-ui-builder-*` coordinate,
   `compose-preview-ui-builder-bom` included.
-- **rc-players** — the RemoteCompose player artifacts.
+- **rc-players** — `rc-players-bom`, the RemoteCompose players, widget helpers
+  and creation forks.
+- **livery** — `livery-bom`, the `livery-*` template catalog modules, the
+  `ee.schimke.composeai.livery.catalog` Gradle plugin and `yschimke/livery`
+  workflows.
 
 **compose-preview-mcp** ([yschimke/compose-preview-mcp](https://github.com/yschimke/compose-preview-mcp),
 `4.x`) is a release train with no rule here, on purpose: it publishes no Maven coordinate. Its
@@ -72,19 +76,20 @@ on) out of the BOM-aligned `androidx-compose` group and off automerge.
 
 **Infra:** `android-gradle-plugin`, `github-actions`.
 
-### One Maven group, six release trains
+### One Maven group, seven release trains
 
-`ee.schimke.composeai` is **not** one release train. Six repositories publish
-into it, each cutting its own versions:
+`ee.schimke.composeai` is **not** one release train. Seven repositories publish
+into it, each cutting its own versions and partial releases:
 
-| Train | Repo | Version line |
-| --- | --- | --- |
-| `compose-ai-tools` | [yschimke/compose-ai-tools](https://github.com/yschimke/compose-ai-tools) | `2.1x.x` |
-| `compose-preview-daemon` | [yschimke/compose-preview-daemon](https://github.com/yschimke/compose-preview-daemon) | `3.x` |
-| `compose-preview-contracts` | [yschimke/compose-preview-contracts](https://github.com/yschimke/compose-preview-contracts) | `2.x` |
-| `compose-preview-server` | [yschimke/compose-preview-server](https://github.com/yschimke/compose-preview-server) | `3.x`, independent of the contracts |
-| `compose-ui-builder` | [yschimke/compose-ui-builder](https://github.com/yschimke/compose-ui-builder) | `3.x`, its own |
-| `rc-players` | yschimke/rc-players | its own, already ahead |
+| Train | Repo | BOM coordinate | Version line |
+| --- | --- | --- | --- |
+| `compose-ai-tools` | [yschimke/compose-ai-tools](https://github.com/yschimke/compose-ai-tools) | `compose-ai-tools-bom` | `2.x` |
+| `compose-preview-daemon` | [yschimke/compose-preview-daemon](https://github.com/yschimke/compose-preview-daemon) | `compose-preview-daemon-bom` | `3.x` |
+| `compose-preview-contracts` | [yschimke/compose-preview-contracts](https://github.com/yschimke/compose-preview-contracts) | `compose-preview-contracts-bom` | `3.x` |
+| `compose-preview-server` | [yschimke/compose-preview-server](https://github.com/yschimke/compose-preview-server) | _(none — historic)_ | `3.x`, independent of the contracts |
+| `compose-ui-builder` | [yschimke/compose-ui-builder](https://github.com/yschimke/compose-ui-builder) | `compose-preview-ui-builder-bom` | `3.x`, its own |
+| `rc-players` | [yschimke/rc-players](https://github.com/yschimke/rc-players) | `rc-players-bom` | `2.x`, its own |
+| `livery` | [yschimke/livery](https://github.com/yschimke/livery) | `livery-bom` | `0.x` |
 
 Grouping them together is not just noise, it is wrong: one group means one
 shared version ref in `libs.versions.toml`, and Renovate raises that ref to
@@ -94,14 +99,19 @@ dragged four compose-ai-tools artifacts to a player-only version, and how
 compose-preview-daemon#91 and #92 opened two branches with byte-identical
 diffs, both rewriting one `composeai-contracts` ref.
 
-The `compose-ai-tools` rule matches the whole group; the other five follow it
+The `compose-ai-tools` rule matches the whole group; the other six follow it
 and carve their own coordinates back out. **Order is load-bearing** — Renovate
 applies `packageRules` in sequence and the last match wins, so a repo-local
-rule appended after the preset re-collapses all five unless it splits them the
-same way.
+rule appended after the preset that matches `/^ee\.schimke\.composeai($|[.:])/`
+re-collapses all six unless it narrows its match to `compose-ai-tools` (`yschimke/compose-ai-tools`,
+`/^ee\.schimke\.composeai\.preview($|[.:])/` and `ee.schimke.composeai:compose-ai-tools-bom`).
 
+Each active train publishes only the modules a release changes and updates its
+`*-bom` on every release, so consuming repositories must declare `ee.schimke.composeai:*`
+libraries **versionless** and resolve them exclusively through `platform(<bom>)`.
 Each train's BOM sits in that train's group, with its modules. A catalog that
-resolves the train through `platform(<bom>)` pins only the BOM; one still
+resolves the train through `platform(<bom>)` pins only the BOM (and can disable
+`/^ee\.schimke\.composeai:/` module updates before re-enabling the BOMs); one still
 pinning a module beside it gets the BOM and the module in the same PR, never a
 module bump on its own against a BOM left behind.
 

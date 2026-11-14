@@ -286,6 +286,12 @@
         "com.android.tools.build:gradle"
       ],
       "allowedVersions": "/^([0-8]\\.[0-9]+|9\\.[0-4])\\.[0-9]+(-(alpha|beta|rc)[0-9]+)?$/"
+    },
+    {
+      "description": "Robolectric 4.18 breaks offline dependency resolution and preview rendering across consuming repositories (cadence#618, meshcore-mobile#740, homeassistant-remotecompose#1586). Exclude 4.18 while preserving snapshot/compat filters.",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": ["org.robolectric:robolectric"],
+      "allowedVersions": "!/^(4\\.18(\\..*)?|.*-SNAPSHOT|.*-compat)$/"
     }
   ]
 }

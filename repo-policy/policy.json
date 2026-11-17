@@ -144,6 +144,9 @@
     ],
     "livery": [
       "gradle"
+    ],
+    "watchface-tools": [
+      "build"
     ]
   },
   "retired_rulesets": {

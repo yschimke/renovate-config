@@ -38,6 +38,7 @@ test('each yschimke BOM resolves to its own release-train group', () => {
     ['ee.schimke.composeai:compose-preview-ui-builder-bom', 'compose-ui-builder'],
     ['ee.schimke.composeai:rc-players-bom', 'rc-players'],
     ['ee.schimke.composeai:livery-bom', 'livery'],
+    ['ee.schimke.watchface:watchface-tools-bom', 'watchface-tools'],
   ];
   for (const [coordinate, expectedGroup] of boms) {
     assert.equal(resolvedGroup(coordinate), expectedGroup, coordinate);
@@ -66,6 +67,10 @@ test('plugins, actions and module prefixes stay with their own release trains', 
     ['ee.schimke.composeai:livery-launcher-widgets', 'gradle', 'livery'],
     ['ee.schimke.composeai.livery.catalog', 'gradle', 'livery'],
     ['yschimke/livery', 'github-actions', 'livery'],
+    ['ee.schimke.watchface:wff-core', 'gradle', 'watchface-tools'],
+    ['ee.schimke.watchface:wff-core-jvm', 'gradle', 'watchface-tools'],
+    ['ee.schimke.watchface:wff-packager', 'gradle', 'watchface-tools'],
+    ['yschimke/watchface-tools', 'github-actions', 'watchface-tools'],
   ];
   for (const [pkg, manager, expectedGroup] of cases) {
     assert.equal(resolvedGroup(pkg, manager), expectedGroup, `${pkg} (${manager})`);

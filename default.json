@@ -254,6 +254,15 @@
       ]
     },
     {
+      "groupName": "watchface-tools",
+      "description": "yschimke/watchface-tools — the Watch Face Format libraries (`wff-core`, and the packager and push modules as they publish) under their own `ee.schimke.watchface` Maven group, plus its workflow refs, released together on one 0.x line. The group is separate from `ee.schimke.composeai`, so no broader rule competes for it; naming it keeps a consumer such as compose-ui-builder from getting one PR per module.",
+      "matchPackageNames": [
+        "yschimke/watchface-tools",
+        "/^ee\\.schimke\\.watchface:/",
+        "/^ee\\.schimke\\.watchface($|[.:])/"
+      ]
+    },
+    {
       "description": "Give majors extra soak time before opening the PR.",
       "matchUpdateTypes": ["major"],
       "minimumReleaseAge": "14 days"

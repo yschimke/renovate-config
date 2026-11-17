@@ -51,6 +51,9 @@ everything else stays small so a single risky bump can't block the safe ones.
 - **livery** — `livery-bom`, the `livery-*` template catalog modules, the
   `ee.schimke.composeai.livery.catalog` Gradle plugin and `yschimke/livery`
   workflows.
+- **watchface-tools** — the `ee.schimke.watchface` Watch Face Format libraries
+  (`wff-core`, the packager and push modules) and `yschimke/watchface-tools`
+  workflow refs, on their own `0.x` line and Maven group.
 
 **compose-preview-mcp** ([yschimke/compose-preview-mcp](https://github.com/yschimke/compose-preview-mcp),
 `4.x`) is a release train with no rule here, on purpose: it publishes no Maven coordinate. Its

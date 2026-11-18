@@ -147,6 +147,9 @@
     ],
     "watchface-tools": [
       "build"
+    ],
+    "kobento-catalog": [
+      "check"
     ]
   },
   "retired_rulesets": {

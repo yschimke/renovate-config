@@ -187,7 +187,7 @@ attribution workflows (`pr-title.yml`, `no-ai-coauthors.yml`) under different jo
 common checks, so the common checks stay `pending` there. Their equivalents — `Validate PR title
 (conventional commits)` and `Scan commits and PR body` — are listed as the repository's own
 required checks instead, next to the assemble and `Unit tests` jobs. The Compose Preview
-`Render previews (baseline or PR comment, auto-selected)` job is required too: these repositories
+`preview / Render previews (baseline or PR comment, auto-selected)` job is required too: these repositories
 set `platformAutomerge: true`, and without it a dependency bump that breaks preview rendering
 merged on green build checks — meshcore-mobile#621 left eight widget previews unrenderable on
 `main`, and the AGP 9.5.0 PRs fail only that job in cadence and meshcore-mobile. The job is

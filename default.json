@@ -285,22 +285,6 @@
       "matchManagers": ["gradle"],
       "matchPackageNames": ["io.github.classgraph:classgraph"],
       "allowedVersions": "/^[0-5]\\.[0-9]+\\.[0-9]+$/"
-    },
-    {
-      "description": "Android Gradle Plugin 9.5 breaks preview rendering with the released `ee.schimke.composeai.preview` plugin (2.74.x): the AGP 9.5.0 PRs fail their render / discovery steps in cadence#409, meshcore-mobile#619, homeassistant-remotecompose#1312 and remote-m3-catalog#224, and `missing-renders: warn` would let a broken render reach main once required checks pass. Hold below 9.5 until a compose-ai-tools release that renders under AGP 9.5 ships, then delete this rule so the AGP and plugin bumps land together. Written as a regex that also excludes -SNAPSHOT, for the same last-match-wins reason as the classgraph rule.",
-      "matchPackageNames": [
-        "com.android.application",
-        "com.android.library",
-        "com.android.kotlin.multiplatform.library",
-        "com.android.tools.build:gradle"
-      ],
-      "allowedVersions": "/^([0-8]\\.[0-9]+|9\\.[0-4])\\.[0-9]+(-(alpha|beta|rc)[0-9]+)?$/"
-    },
-    {
-      "description": "Robolectric 4.18 breaks offline dependency resolution and preview rendering across consuming repositories (cadence#618, meshcore-mobile#740, homeassistant-remotecompose#1586). Exclude 4.18 while preserving snapshot/compat filters.",
-      "matchManagers": ["gradle"],
-      "matchPackageNames": ["org.robolectric:robolectric"],
-      "allowedVersions": "!/^(4\\.18(\\..*)?|.*-SNAPSHOT|.*-compat)$/"
     }
   ]
 }

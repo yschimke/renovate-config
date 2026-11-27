@@ -285,6 +285,18 @@
       "matchManagers": ["gradle"],
       "matchPackageNames": ["io.github.classgraph:classgraph"],
       "allowedVersions": "/^[0-5]\\.[0-9]+\\.[0-9]+$/"
+    },
+    {
+      "description": "compose-bom 2026.11 pulls Compose 1.13 artifacts whose AAR metadata declares minCompileSdk = 37.1, failing checkAarMetadata across repositories compiling against API 37 (compose-ai-tools#6724, compose-preview-daemon#534, watchface-tools#94). Skip 2026.11 while preserving -SNAPSHOT/-compat filters. Remove when consuming repositories raise compileSdk to 37.1+.",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": ["androidx.compose:compose-bom"],
+      "allowedVersions": "!/^(2026\\.11(\\..*)?|.*-SNAPSHOT|.*-compat)$/"
+    },
+    {
+      "description": "Compose 1.13 core artifacts declare minCompileSdk = 37.1 in AAR metadata (compose-ai-tools#6724, compose-preview-daemon#534, watchface-tools#94). Skip 1.13.x while preserving -SNAPSHOT/-compat filters. Remove when consuming repositories raise compileSdk to 37.1+.",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": ["/^androidx\\.compose\\.(animation|foundation|material|runtime|ui)($|[.:])/"],
+      "allowedVersions": "!/^(1\\.13(\\..*)?|.*-SNAPSHOT|.*-compat)$/"
     }
   ]
 }
